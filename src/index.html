@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>0Player Game</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <h1>0Player</h1>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+    </div>
+    <div id="controls-container">
+        <div>
+            <label>
+                <input id="snap-checkbox" type="checkbox" checked />
+                Snap to grid
+            </label>
+            <!-- <div id="controls">
+                <h3>Controls:</h3>
+                <p>WASD to move the camera</p>
+                <p>Q/E to Zoom Out/In</p>
+                <p>Right click and drag to move blocks</p>
+                <p>Left click to toggle costumes</p>
+            </div> -->
+        </div>
+    </div>
+    <script src="js/block.js"></script>
+    <script src="js/background.js"></script>
+    <script src="js/stage.js"></script>
+    <script src="js/wire.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
