@@ -40,7 +40,8 @@ const keys = {
   s: false,
   d: false,
   q: false,
-  e: false
+  e: false,
+  g: false
 };
 
 // Helper: convert mouse event to map coordinates (handles canvas position/scale and zoom)
@@ -102,6 +103,9 @@ canvas.addEventListener('mousemove', (e) => {
 
   const pos = getMapCoordsFromEvent(e);
 
+  // Hover highlighting (always)
+  if (stage) stage.hoverAt(pos.x, pos.y);
+
   // Dragging with left mouse button — delegate to Stage
   if (isMouseDown && mouseButton === 0 && stage && stage.draggingBlock) {
     stage.updateDrag(pos.x, pos.y, snapToGrid);
@@ -125,20 +129,30 @@ canvas.addEventListener('mouseleave', () => {
   hasMousePos = false;
 });
 
-// Keyboard handlers for WASD + Q/E
+// Keyboard handlers for WASD + Q/E + G
 window.addEventListener('keydown', (e) => {
   const k = e.key.toLowerCase();
   if (k in keys) {
+    const was = keys[k];
     keys[k] = true;
     e.preventDefault();
+    // start grouping mode when g is pressed
+    if (k === 'g' && !was && stage) {
+      stage.startGroupingMode();
+    }
   }
 });
 
 window.addEventListener('keyup', (e) => {
   const k = e.key.toLowerCase();
   if (k in keys) {
+    const was = keys[k];
     keys[k] = false;
     e.preventDefault();
+    // finalize grouping when g released only if it was pressed
+    if (k === 'g' && was && stage) {
+      stage.finalizeGrouping();
+    }
   }
 });
 
@@ -157,15 +171,25 @@ function handleMouseDown(e) {
   }
 
   if (button === 2) {
-    // Right click: toggle wire if clicked (squares first, then background wires)
-    if (stage) {
-      const toggled = stage.isClicked(pos.x, pos.y);
-      if (toggled) {
-        render();
-        return;
+    // Right click:
+    if (keys.g) {
+      // Grouping: add clicked block to temp selection instead of toggling wires
+      if (stage) {
+        const added = stage.addBlockToTempAt(pos.x, pos.y);
+        if (added) render();
       }
+      return;
+    } else {
+      // Regular right-click behavior (toggle wire)
+      if (stage) {
+        const toggled = stage.isClicked(pos.x, pos.y);
+        if (toggled) {
+          render();
+          return;
+        }
+      }
+      return;
     }
-    return;
   }
 
   switch(button) {

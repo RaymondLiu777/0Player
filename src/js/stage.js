@@ -3,9 +3,20 @@ class Stage {
     this.tileSize = tileSize;
     this.background = null;
     this.squares = [];
+    this.blockById = {}; // map id -> Block
+    this.groups = new BlockGroups();
+
     this.draggingBlock = null;
+    this.draggingGroup = false;
     this.dragOffsetX = 0; // in world pixels
     this.dragOffsetY = 0;
+    this.originalPositions = null; // used when dragging group
+    this.groupMainOriginal = null; // original main block pos when group drag started
+
+    // grouping state
+    this.isGrouping = false;
+    this.hoverGroupId = null;
+    this.hoverSingleId = null;
   }
 
   async load(dataPath) {
@@ -32,6 +43,8 @@ class Stage {
     data.blocks.mapWidth = data.size.width;
     const squares = Block.fromData(data.blocks, blocksImg, this.tileSize);
     this.squares = squares;
+    this.blockById = {};
+    for (const b of this.squares) this.blockById[b.spriteId] = b;
 
     // --- Wires ---
     const wireImg = await loadImage(`assets/${data.wires.spriteSheet}`);
@@ -54,8 +67,6 @@ class Stage {
     if (this.background) {
       this.background.setWires(remainingWires);
     }
-    console.log(this.squares);
-    console.log(remainingWires);
     return this;
   }
 
@@ -87,25 +98,130 @@ class Stage {
     return null;
   }
 
+  // Grouping mode controls
+  startGroupingMode() {
+    if (this.isGrouping) return;
+    this.isGrouping = true;
+    this.groups.clearTemp();
+    // cancel any active drag
+    if (this.draggingBlock) this.endDrag();
+    this.hoverGroupId = null;
+    this.hoverSingleId = null;
+    this.recomputeHighlights();
+  }
+
+  addBlockToTempAt(mapX, mapY) {
+    const sq = this.findTopSquareAt(mapX, mapY);
+    if (!sq) return null;
+    this.groups.addTemp(sq.spriteId);
+    this.recomputeHighlights();
+    return sq;
+  }
+
+  finalizeGrouping() {
+    if (!this.isGrouping) return null;
+    const gid = this.groups.finalizeTemp();
+    this.isGrouping = false;
+    this.recomputeHighlights();
+    return gid;
+  }
+
+  hoverAt(mapX, mapY) {
+    const sq = this.findTopSquareAt(mapX, mapY);
+    if (!sq) {
+      this.hoverGroupId = null;
+      this.hoverSingleId = null;
+      this.recomputeHighlights();
+      return;
+    }
+    const gid = this.groups.getGroupFor(sq.spriteId);
+    if (gid) {
+      this.hoverGroupId = gid;
+      this.hoverSingleId = null;
+    } else {
+      this.hoverGroupId = null;
+      this.hoverSingleId = sq.spriteId;
+    }
+    this.recomputeHighlights();
+  }
+
+  recomputeHighlights() {
+    const tempSet = this.groups.tempSelection;
+    for (const b of this.squares) {
+      const inTemp = tempSet.has(b.spriteId);
+      const inHoverGroup = this.hoverGroupId && this.groups.getGroupFor(b.spriteId) === this.hoverGroupId;
+      const isHoverSingle = this.hoverSingleId && this.hoverSingleId === b.spriteId;
+      b.setHighlighted(inTemp || inHoverGroup || isHoverSingle);
+    }
+  }
+
   // Begin dragging a square if one exists at map coords.
   // Returns the dragged Block or null.
   startDrag(mapX, mapY) {
+    if (this.isGrouping) return null; // dragging not supported while grouping
     const sq = this.findTopSquareAt(mapX, mapY);
     if (!sq) return null;
     this.draggingBlock = sq;
     this.dragOffsetX = mapX - sq.x;
     this.dragOffsetY = mapY - sq.y;
+
+    // Check group membership
+    const gid = this.groups.getGroupFor(sq.spriteId);
+    if (gid && this.groups.getBlocksInGroup(gid).length > 1) {
+      // start group drag
+      this.draggingGroup = true;
+      // store original positions for all members
+      this.originalPositions = {};
+      for (const bid of this.groups.getBlocksInGroup(gid)) {
+        const b = this.blockById[bid];
+        if (b) this.originalPositions[bid] = { x: b.x, y: b.y };
+      }
+      this.groupMainOriginal = { x: sq.x, y: sq.y };
+    } else {
+      this.draggingGroup = false;
+      this.originalPositions = null;
+      this.groupMainOriginal = null;
+    }
+
     return sq;
   }
 
   // Update the current drag to follow mapX,mapY (map coords are world pixels).
-  // snapToGrid boolean controls grid snapping; if true snaps to tileSize multiples.
+  // snapToGrid boolean controls grid snapping; if true snaps main tile to tileSize multiples.
   updateDrag(mapX, mapY, snapToGrid = true) {
     if (!this.draggingBlock) return;
     const tileSize = this.draggingBlock.tileSize || this.tileSize;
+
+    if (this.draggingGroup && this.originalPositions && this.groupMainOriginal) {
+      // compute target main block pos
+      let targetMainX = mapX - this.dragOffsetX;
+      let targetMainY = mapY - this.dragOffsetY;
+      if (snapToGrid) {
+        targetMainX = Math.round(targetMainX / tileSize) * tileSize;
+        targetMainY = Math.round(targetMainY / tileSize) * tileSize;
+      } else {
+        targetMainX = Math.round(targetMainX);
+        targetMainY = Math.round(targetMainY);
+      }
+
+      const deltaX = targetMainX - this.groupMainOriginal.x;
+      const deltaY = targetMainY - this.groupMainOriginal.y;
+
+      // apply delta to all members
+      const gid = this.groups.getGroupFor(this.draggingBlock.spriteId);
+      if (!gid) return;
+      for (const bid of this.groups.getBlocksInGroup(gid)) {
+        const b = this.blockById[bid];
+        const orig = this.originalPositions[bid];
+        if (!b || !orig) continue;
+        b.setWorldPosition(orig.x + deltaX, orig.y + deltaY);
+      }
+      return;
+    }
+
+    // Single-block drag
     let targetX = mapX - this.dragOffsetX;
     let targetY = mapY - this.dragOffsetY;
-
     if (snapToGrid) {
       targetX = Math.round(targetX / tileSize) * tileSize;
       targetY = Math.round(targetY / tileSize) * tileSize;
@@ -129,8 +245,11 @@ class Stage {
   endDrag() {
     const b = this.draggingBlock;
     this.draggingBlock = null;
+    this.draggingGroup = false;
     this.dragOffsetX = 0;
     this.dragOffsetY = 0;
+    this.originalPositions = null;
+    this.groupMainOriginal = null;
     return b;
   }
 

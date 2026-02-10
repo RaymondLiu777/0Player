@@ -17,6 +17,7 @@ class Block {
     this.spriteSheet = spriteSheet;
     this.spriteFrame = spriteFrame;
     this.wire = wire;
+    this.highlighted = false;
   }
 
   // Returns true if the given map pixel coordinates (mapX, mapY) fall inside this block's tile
@@ -36,6 +37,11 @@ class Block {
       return true;
     }
     return false;
+  }
+
+  // Set highlight state
+  setHighlighted(flag) {
+    this.highlighted = flag;
   }
 
   // Set world position (in pixels). Updates attached wire world position too.
@@ -77,6 +83,15 @@ class Block {
       screenX, screenY,
       screenW, screenH
     );
+
+    // Highlight overlay (semi-transparent)
+    if (this.highlighted) {
+      ctx.fillStyle = 'rgba(255,255,255,0.20)';
+      ctx.fillRect(screenX, screenY, screenW, screenH);
+      // ctx.strokeStyle = 'rgba(0,100,200,0.6)';
+      // ctx.lineWidth = Math.max(1, Math.round(2 * zoomLevel));
+      // ctx.strokeRect(screenX + 0.5, screenY + 0.5, screenW - 1, screenH - 1);
+    }
 
     // Draw the attached wire on top (if present)
     if (this.wire) {
