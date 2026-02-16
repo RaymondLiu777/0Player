@@ -1,26 +1,22 @@
 class Background {
-  constructor(dataPath, tileSize) {
-    this.dataPath = dataPath;
+  constructor(tileSize) {
     this.tileSize = tileSize;
     this.spritemap = {};
     this.mapData = [];
-    this.spriteIds = {};
     this.image = new Image();
     this.loaded = false;
     this.width = 0;
     this.height = 0;
     this.wires = [];
+    this.bgTile = 0;
   }
 
   load(data, image) {
-    // Store sprite IDs mapping
-    this.spriteIds = data.background.spriteIds;
-
     // Set map size and mapData (numbers)
-    this.height = data.size.height;
-    this.width = data.size.width;
+    this.height = data.mapHeight;
+    this.width = data.mapWidth;
     this.mapData = [];
-    const spriteMap = data.background.spriteMap;
+    const spriteMap = data.spriteMap;
     for (let row = 0; row < this.height; row++) {
       const rowData = [];
       for (let col = 0; col < this.width; col++) {
@@ -33,19 +29,25 @@ class Background {
     this.image = image;
     // Build spritemap keyed by numeric sprite id (ids are 1-based)
     this.spritemap = {};
-    for (const [name, id] of Object.entries(this.spriteIds)) {
+    console.log(data);
+    const cols = data.spriteSheetSize.columns;
+    const rows = data.spriteSheetSize.rows;
+    const total = data.spriteSheetSize.count;
+    for (let id = 1; id <= total; id++) {
       const idx = id - 1;
-      const col = 0;
-      const row = idx;
-      this.spritemap[id] = {
-        name: name,
-        x: col * this.tileSize,
-        y: row * this.tileSize,
-        w: this.tileSize,
-        h: this.tileSize
+      const col = idx % cols;
+      const row = Math.floor(idx / cols);
+      this.spritemap[id] = { 
+        x: col * this.tileSize, 
+        y: row * this.tileSize, 
+        w: this.tileSize, 
+        h: this.tileSize 
       };
     }
+
     this.loaded = true;
+    this.bgTile = this.spritemap[data.bgTile];
+    console.log(this.bgTile);
     return this;
   }
 
@@ -88,7 +90,6 @@ class Background {
         const spriteId = rowData[col];
 
         const sprite = this.spritemap[spriteId];
-        if (!sprite) continue;
 
         const worldX = col * this.tileSize;
         const worldY = row * this.tileSize;
@@ -98,13 +99,24 @@ class Background {
         const nextScreenY = Math.floor(((worldY + this.tileSize) - cameraY) * zoomLevel);
         const screenWidth = nextScreenX - screenX;
         const screenHeight = nextScreenY - screenY;
-
+        
+        // Draw background tile
         ctx.drawImage(
           this.image,
-          sprite.x, sprite.y, sprite.w, sprite.h,
+          this.bgTile.x, this.bgTile.y, this.bgTile.w, this.bgTile.h,
           screenX, screenY,
           screenWidth, screenHeight
         );
+
+        if (sprite) {
+          // Draw background object
+          ctx.drawImage(
+            this.image,
+            sprite.x, sprite.y, sprite.w, sprite.h,
+            screenX, screenY,
+            screenWidth, screenHeight
+          );
+        }
       }
     }
 

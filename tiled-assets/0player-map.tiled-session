@@ -20,8 +20,8 @@
             "scale": 0.5,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 704,
-                "y": 617
+                "x": 506,
+                "y": 461
             }
         },
         "wires.tsx": {

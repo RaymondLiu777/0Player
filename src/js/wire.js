@@ -90,7 +90,7 @@ class Wire {
   static fromData(wiresData, wireImage, tileSize = 64) {
     const cols = wiresData.spriteSheetSize.columns;
     const rows = wiresData.spriteSheetSize.rows;
-    const total = cols * rows;
+    const total = wiresData.spriteSheetSize.count;
     const frames = {};
     for (let id = 1; id <= total; id++) {
       const idx = id - 1;
@@ -108,11 +108,12 @@ class Wire {
     const map = wiresData.spriteMap || [];
     const mapWidth = wiresData.mapWidth;
     const wires = [];
+    const offset = wiresData.spriteOffset;
     let instanceId = 1;
     for (let i = 0; i < map.length; i++) {
       let imageId = map[i];
       if (!imageId) continue;
-      imageId -= 3;
+      imageId -= offset;
       const row = Math.floor(i / mapWidth);
       const col = i % mapWidth;
       const spriteName = idToName[imageId];

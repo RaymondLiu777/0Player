@@ -106,7 +106,7 @@ class Block {
   static fromData(blocksData, blocksImage, tileSize = 64) {
     const cols = blocksData.spriteSheetSize.columns;
     const rows = blocksData.spriteSheetSize.rows;
-    const total = cols * rows;
+    const total = blocksData.spriteSheetSize.count;
     const frames = {};
     for (let id = 1; id <= total; id++) {
       const idx = id - 1;
@@ -114,25 +114,21 @@ class Block {
       const row = Math.floor(idx / cols);
       frames[id] = { x: col * tileSize, y: row * tileSize, w: tileSize, h: tileSize };
     }
-
-    // invert spriteIds mapping id -> name
-    const idToName = {};
-    for (const [name, id] of Object.entries(blocksData.spriteIds || {})) {
-      idToName[id] = name;
-    }
+    console.log(frames);
 
     const map = blocksData.spriteMap || [];
     const blocks = [];
     const width = blocksData.mapWidth;
+    const offset = blocksData.spriteOffset;
     let instanceId = 1;
     for (let i = 0; i < map.length; i++) {
-      const spriteId = map[i];
+      let spriteId = map[i];
       if (!spriteId) continue;
+      spriteId -= offset;
+      console.log(spriteId);
       const row = Math.floor(i / width);
       const col = i % width;
       const frame = frames[spriteId];
-      const name = idToName[spriteId] || null;
-      // New constructor order: spriteId, spriteName, location, spriteSheet, spriteFrame, tileSize, wire
       const block = new Block(instanceId, name, { x: col, y: row }, blocksImage, frame, tileSize, null);
       instanceId += 1;
       blocks.push(block);

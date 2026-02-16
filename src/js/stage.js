@@ -33,13 +33,16 @@ class Stage {
 
     // --- Background ---
     const bgImg = await loadImage(`assets/${data.background.spriteSheet}`);
-    const bg = new Background(dataPath, this.tileSize);
-    bg.load(data, bgImg);
+    const bg = new Background(this.tileSize);
+    data.background.mapHeight = data.size.height;
+    data.background.mapWidth = data.size.width;
+    bg.load(data.background, bgImg);
     this.background = bg;
 
     // --- Blocks / Squares ---
     const blocksImg = await loadImage(`assets/${data.blocks.spriteSheet}`);
     // Provide mapWidth information so Block.fromData can compute proper row/col
+    data.background.mapHeight = data.size.height;
     data.blocks.mapWidth = data.size.width;
     const squares = Block.fromData(data.blocks, blocksImg, this.tileSize);
     this.squares = squares;
@@ -49,6 +52,7 @@ class Stage {
     // --- Wires ---
     const wireImg = await loadImage(`assets/${data.wires.spriteSheet}`);
     // Provide mapWidth to wire loader as well
+    data.background.mapHeight = data.size.height;
     data.wires.mapWidth = data.size.width;
     const wires = Wire.fromData(data.wires, wireImg, this.tileSize);
 
