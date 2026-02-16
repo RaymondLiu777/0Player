@@ -29,7 +29,6 @@ class Background {
     this.image = image;
     // Build spritemap keyed by numeric sprite id (ids are 1-based)
     this.spritemap = {};
-    console.log(data);
     const cols = data.spriteSheetSize.columns;
     const rows = data.spriteSheetSize.rows;
     const total = data.spriteSheetSize.count;
@@ -47,7 +46,6 @@ class Background {
 
     this.loaded = true;
     this.bgTile = this.spritemap[data.bgTile];
-    console.log(this.bgTile);
     return this;
   }
 

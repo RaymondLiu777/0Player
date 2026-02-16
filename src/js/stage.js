@@ -17,6 +17,9 @@ class Stage {
     this.isGrouping = false;
     this.hoverGroupId = null;
     this.hoverSingleId = null;
+
+    // snap threshold (pixels) for lenient snapping — adjustable
+    this.snapThreshold = 12;
   }
 
   async load(dataPath) {
@@ -191,21 +194,41 @@ class Stage {
   }
 
   // Update the current drag to follow mapX,mapY (map coords are world pixels).
-  // snapToGrid boolean controls grid snapping; if true snaps main tile to tileSize multiples.
+  // snapToGrid boolean controls grid snapping; lenient snapping uses this.snapThreshold.
   updateDrag(mapX, mapY, snapToGrid = true) {
     if (!this.draggingBlock) return;
     const tileSize = this.draggingBlock.tileSize || this.tileSize;
 
+    const applyLenientSnap = (rawX, rawY) => {
+      // nearest tile-aligned positions
+      const nearestX = Math.round(rawX / tileSize) * tileSize;
+      const nearestY = Math.round(rawY / tileSize) * tileSize;
+      const dx = Math.abs(rawX - nearestX);
+      const dy = Math.abs(rawY - nearestY);
+
+      // Snap to nearest x or y if within threshold
+      let desX = Math.round(rawX);
+      let desY = Math.round(rawY);
+      if (dx <= this.snapThreshold ) {
+        desX = nearestX;
+      }
+      if (dy <= this.snapThreshold) {
+        desY = nearestY
+      }
+      return {x: desX, y: desY};
+    };
+
     if (this.draggingGroup && this.originalPositions && this.groupMainOriginal) {
       // compute target main block pos
-      let targetMainX = mapX - this.dragOffsetX;
-      let targetMainY = mapY - this.dragOffsetY;
+      let rawTargetMainX = mapX - this.dragOffsetX;
+      let rawTargetMainY = mapY - this.dragOffsetY;
+
+      let targetMainX, targetMainY;
       if (snapToGrid) {
-        targetMainX = Math.round(targetMainX / tileSize) * tileSize;
-        targetMainY = Math.round(targetMainY / tileSize) * tileSize;
+        ({ x: targetMainX, y: targetMainY } = applyLenientSnap(rawTargetMainX, rawTargetMainY));
       } else {
-        targetMainX = Math.round(targetMainX);
-        targetMainY = Math.round(targetMainY);
+        targetMainX = Math.round(rawTargetMainX);
+        targetMainY = Math.round(rawTargetMainY);
       }
 
       const deltaX = targetMainX - this.groupMainOriginal.x;
@@ -224,14 +247,15 @@ class Stage {
     }
 
     // Single-block drag
-    let targetX = mapX - this.dragOffsetX;
-    let targetY = mapY - this.dragOffsetY;
+    let rawTargetX = mapX - this.dragOffsetX;
+    let rawTargetY = mapY - this.dragOffsetY;
+
+    let targetX, targetY;
     if (snapToGrid) {
-      targetX = Math.round(targetX / tileSize) * tileSize;
-      targetY = Math.round(targetY / tileSize) * tileSize;
+      ({ x: targetX, y: targetY } = applyLenientSnap(rawTargetX, rawTargetY));
     } else {
-      targetX = Math.round(targetX);
-      targetY = Math.round(targetY);
+      targetX = Math.round(rawTargetX);
+      targetY = Math.round(rawTargetY);
     }
 
     // Optionally clamp to stage bounds if available

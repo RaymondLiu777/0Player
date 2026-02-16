@@ -114,7 +114,6 @@ class Block {
       const row = Math.floor(idx / cols);
       frames[id] = { x: col * tileSize, y: row * tileSize, w: tileSize, h: tileSize };
     }
-    console.log(frames);
 
     const map = blocksData.spriteMap || [];
     const blocks = [];
@@ -125,7 +124,6 @@ class Block {
       let spriteId = map[i];
       if (!spriteId) continue;
       spriteId -= offset;
-      console.log(spriteId);
       const row = Math.floor(i / width);
       const col = i % width;
       const frame = frames[spriteId];
