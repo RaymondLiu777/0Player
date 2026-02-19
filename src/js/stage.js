@@ -59,27 +59,35 @@ class Stage {
     data.wires.mapWidth = data.size.width;
     const wires = Wire.fromData(data.wires, wireImg, this.tileSize);
 
-    // Attach wires to squares when co-located; remaining wires go to background
-    const remainingWires = [];
+    // Attach wires to squares when co-located; remaining wires go to background tiles
     for (const w of wires) {
       const sq = this.squares.find(s => s.x === w.x && s.y === w.y);
       if (sq) {
+        // Attach to block
         sq.wire = w;
         w.height = sq.height;
       } else {
-        const bgX = w.x / this.background.tileSize;
-        const bgY = w.y / this.background.tileSize;
-        const bgTileId = this.background.mapData[bgY][bgX];
-        if (bgTileId) {
-          w.height = this.background.spritemap[bgTileId].height;
+        // Attach to background tile (check main tiles first, then ground tiles)
+        const col = Math.floor(w.x / this.tileSize);
+        const row = Math.floor(w.y / this.tileSize);
+        
+        let tile = null;
+        // Check main tiles first
+        if (row >= 0 && row < this.background.tiles.length && col >= 0 && col < this.background.tiles[row].length) {
+          tile = this.background.tiles[row][col];
         }
-        remainingWires.push(w);
+        // Fall back to ground tiles if main tile is empty/transparent
+        if (!tile || tile.spriteId === 0) {
+          if (row >= 0 && row < this.background.groundTiles.length && col >= 0 && col < this.background.groundTiles[row].length) {
+            tile = this.background.groundTiles[row][col];
+          }
+        }
+        
+        if (tile) {
+          tile.wire = w;
+          w.height = tile.height;
+        }
       }
-    }
-
-    // Give remaining wires to background for drawing
-    if (this.background) {
-      this.background.setWires(remainingWires);
     }
     return this;
   }

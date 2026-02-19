@@ -15,7 +15,7 @@
         "height": 8
       },
       "ground": {
-        "sprites": [ 56, 57 ],
+        "sprites": [ 0, 56, 57 ],
         "height": 0
       }
     },

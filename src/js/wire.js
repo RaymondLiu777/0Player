@@ -39,10 +39,10 @@ class Wire {
     const worldX = this.x;
     const worldY = this.y;
     return (
-      mapX >= worldX &&
-      mapX < worldX + this.tileSize &&
-      mapY >= worldY &&
-      mapY < worldY + this.tileSize
+      mapX >= worldX - this.height &&
+      mapX < worldX + this.tileSize - this.height &&
+      mapY >= worldY - this.height &&
+      mapY < worldY + this.tileSize - this.height
     );
   }
 
