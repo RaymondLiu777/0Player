@@ -297,35 +297,91 @@ class Stage {
   }
 
   draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel = 1) {
-    // Draw in layers 
-    // 0 = default floor tiling
-    // 1 = 3d effects of stage
-    // 2 = stage 
-    // 3 = stage wires
-    // 4 = 3d effects of blocks
-    // 5 = blocks
-    // 6 = blocks wires
-    // 7 = highlights
+    // Collect all drawable objects (tiles and blocks)
+    const groundLayer = [];
+    const drawables = [];
 
+    // Collect visible background tiles (height = 0 ground tiles)
     if (this.background) {
-      this.background.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 0);
-      this.background.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 1);
-      this.background.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 2);
-      this.background.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 3);
+      const visibleTiles = this.background.getVisibleTiles(cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
+      
+      // Separate ground tiles from main tiles
+      for (const tile of visibleTiles) {
+        if (tile.height === 0) {
+          groundLayer.push({ type: 'tile', obj: tile, x: tile.x, y: tile.y });
+        }
+      }
+      
+      // Add main tiles and separate blocks for collision checking
+      for (const tile of visibleTiles) {
+        if (tile.height > 0) {
+          drawables.push({ type: 'tile', obj: tile, x: tile.x, y: tile.y });
+        }
+      }
     }
 
-    // Draw squares
-    for (const s of this.squares) {
-      s.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 4);
+    // Collect visible blocks (with culling)
+    const viewWidth = canvasWidth / zoomLevel;
+    const viewHeight = canvasHeight / zoomLevel;
+    for (const block of this.squares) {
+      if (block.x + block.tileSize < cameraX || block.x > cameraX + viewWidth ||
+          block.y + block.tileSize < cameraY || block.y > cameraY + viewHeight) {
+        continue; // Cull off-screen blocks
+      }
+      drawables.push({ type: 'block', obj: block, x: block.x, y: block.y });
     }
-    for (const s of this.squares) {
-      s.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 5);
+
+    // Sort by x + y (isometric-like ordering: top-left to bottom-right)
+    groundLayer.sort((a, b) => (a.x + a.y) - (b.x + b.y));
+    drawables.sort((a, b) => (a.x + a.y) - (b.x + b.y));
+
+    // Draw ground layer
+    for (const item of groundLayer) {
+      item.obj.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
     }
-    for (const s of this.squares) {
-      s.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 6);
-    }
-    for (const s of this.squares) {
-      s.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 7);
+
+    // Draw all objects in sorted order, handling tile-block collisions
+    const drawnTiles = new Set();
+    for (const item of drawables) {
+      if (item.type === 'tile') {
+        if (drawnTiles.has(item.obj)) {
+          continue;
+        }
+        drawnTiles.add(item.obj);
+        item.obj.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
+      } else if (item.type === 'block') {
+        // Check if this block collides with any undrawn tiles
+        const blockBounds = {
+          x1: item.obj.x,
+          y1: item.obj.y,
+          x2: item.obj.x + item.obj.tileSize,
+          y2: item.obj.y + item.obj.tileSize
+        };
+
+        // Draw any colliding tiles that haven't been drawn yet
+        if (this.background) {
+          const startCol = Math.floor(blockBounds.x1 / this.tileSize);
+          const endCol = Math.ceil(blockBounds.x2 / this.tileSize);
+          const startRow = Math.floor(blockBounds.y1 / this.tileSize);
+          const endRow = Math.ceil(blockBounds.y2 / this.tileSize);
+
+          for (let row = startRow; row < endRow; row++) {
+            for (let col = startCol; col < endCol; col++) {
+              // Check main tiles
+              if (row >= 0 && row < this.background.tiles.length && col >= 0 && col < this.background.tiles[row].length) {
+                const tile = this.background.tiles[row][col];
+                if (tile && !drawnTiles.has(tile)) {
+                  drawnTiles.add(tile);
+                  tile.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
+                }
+              }
+            }
+          }
+        }
+
+        // Draw the block
+        item.obj.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
+      }
     }
   }
 }

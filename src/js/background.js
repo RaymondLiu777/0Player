@@ -102,24 +102,21 @@ class Background {
       const tile = this.tiles[row][col];
       if (tile.isClicked(mapX, mapY)) {
         if (tile.toggle()) return tile.wire;
-        return tile;
       }
     }
-
     // Check ground tiles for wires
     if (row >= 0 && row < this.groundTiles.length && col >= 0 && col < this.groundTiles[row].length) {
       const groundTile = this.groundTiles[row][col];
       if (groundTile.isClicked(mapX, mapY)) {
         if (groundTile.toggle()) return groundTile.wire;
-        return groundTile;
       }
     }
 
     return null;
   }
 
-  // Draw only visible tiles for the current camera view
-  draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel = 1, layer) {
+  // Collect all visible tiles for drawing
+  getVisibleTiles(cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel) {
     const viewWidth = canvasWidth / zoomLevel;
     const viewHeight = canvasHeight / zoomLevel;
 
@@ -128,7 +125,9 @@ class Background {
     const startRow = Math.floor(cameraY / this.tileSize);
     const endRow = Math.ceil((cameraY + viewHeight) / this.tileSize);
 
-    // Draw ground tiles first
+    const tiles = [];
+
+    // Collect ground tiles
     for (let row = startRow; row <= endRow; row++) {
       if (row < 0 || row >= this.groundTiles.length) continue;
       const rowData = this.groundTiles[row];
@@ -137,12 +136,12 @@ class Background {
         if (col < 0 || col >= rowData.length) continue;
         const tile = rowData[col];
         if (tile) {
-          tile.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, layer);
+          tiles.push(tile);
         }
       }
     }
 
-    // Draw main layer tiles
+    // Collect main layer tiles
     for (let row = startRow; row <= endRow; row++) {
       if (row < 0 || row >= this.tiles.length) continue;
       const rowData = this.tiles[row];
@@ -151,9 +150,11 @@ class Background {
         if (col < 0 || col >= rowData.length) continue;
         const tile = rowData[col];
         if (tile) {
-          tile.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, layer);
+          tiles.push(tile);
         }
       }
     }
+
+    return tiles;
   }
 }

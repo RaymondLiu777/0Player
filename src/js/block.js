@@ -58,18 +58,9 @@ class Block {
     }
   }
 
-  // Draw the block and its attached wire (if any). Cull tiles outside the view.
-  draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, layer) {
+  // Draw the block and its attached wire (if any)
+  draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel) {
     if (!this.spriteSheet || !this.spriteSheet.complete || !this.spriteFrame) return;
-
-    const viewWidth = canvasWidth / zoomLevel;
-    const viewHeight = canvasHeight / zoomLevel;
-
-    // Cull in world coordinates
-    if (this.x + this.tileSize < cameraX || this.x > cameraX + viewWidth ||
-        this.y + this.tileSize < cameraY || this.y > cameraY + viewHeight) {
-      return;
-    }
 
     const screenX = Math.floor((this.x - cameraX) * zoomLevel);
     const screenY = Math.floor((this.y - cameraY) * zoomLevel);
@@ -79,39 +70,34 @@ class Block {
     const screenH = Math.max(1, nextScreenY - screenY);
     const screen3D = Math.floor(this.height * zoomLevel);
 
-    // 3d effect of block
-    if (layer == 4) {
-      ctx.filter = "brightness(60%)";
-      ctx.drawImage(
-        this.spriteSheet,
-        this.spriteFrame.x, this.spriteFrame.y, this.spriteFrame.w, this.spriteFrame.h,
-        screenX, screenY,
-        screenW, screenH
-      );
-      ctx.filter = "none";
-    }
+    // Draw 3D shadow effect
+    ctx.filter = "brightness(60%)";
+    ctx.drawImage(
+      this.spriteSheet,
+      this.spriteFrame.x, this.spriteFrame.y, this.spriteFrame.w, this.spriteFrame.h,
+      screenX, screenY,
+      screenW, screenH
+    );
+    ctx.filter = "none";
 
-    // Block
-    if(layer == 5) {
-      ctx.drawImage(
-        this.spriteSheet,
-        this.spriteFrame.x, this.spriteFrame.y, this.spriteFrame.w, this.spriteFrame.h,
-        screenX - screen3D, screenY - screen3D,
-        screenW, screenH
-      );
-    }
+    // Draw block sprite offset by 3D effect
+    ctx.drawImage(
+      this.spriteSheet,
+      this.spriteFrame.x, this.spriteFrame.y, this.spriteFrame.w, this.spriteFrame.h,
+      screenX - screen3D, screenY - screen3D,
+      screenW, screenH
+    );
 
     // Draw the attached wire on top (if present)
-    if (this.wire && layer == 6) {
+    if (this.wire) {
       this.wire.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
     }
 
     // Highlight overlay (semi-transparent)
-    if (this.highlighted && layer == 7) {
+    if (this.highlighted) {
       ctx.fillStyle = 'rgba(255,255,255,0.20)';
       ctx.fillRect(screenX - screen3D, screenY - screen3D, screenW, screenH);
     }
-
   }
 
   // Static helper: create Block instances from blocks section of data.json
