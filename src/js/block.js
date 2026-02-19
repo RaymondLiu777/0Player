@@ -8,7 +8,7 @@ class Block {
    * @param {number} tileSize - size of a tile in pixels
    * @param {Wire|null} wire - optional Wire instance attached to this block
    */
-  constructor(spriteId, spriteName, location, spriteSheet, spriteFrame, tileSize = 64, wire = null) {
+  constructor(spriteId, spriteName, location, spriteSheet, spriteFrame, tileSize = 64, wire = null, height = 0) {
     this.spriteId = spriteId;
     this.spriteName = spriteName;
     this.x = location.x * tileSize; // world pixels
@@ -18,15 +18,16 @@ class Block {
     this.spriteFrame = spriteFrame;
     this.wire = wire;
     this.highlighted = false;
+    this.height = height;
   }
 
   // Returns true if the given map pixel coordinates (mapX, mapY) fall inside this block's tile
   isClicked(mapX, mapY) {
     return (
-      mapX >= this.x &&
-      mapX < this.x + this.tileSize &&
-      mapY >= this.y &&
-      mapY < this.y + this.tileSize
+      mapX >= this.x - this.height &&
+      mapX < this.x + this.tileSize - this.height &&
+      mapY >= this.y - this.height &&
+      mapY < this.y + this.tileSize - this.height
     );
   }
 
@@ -58,7 +59,7 @@ class Block {
   }
 
   // Draw the block and its attached wire (if any). Cull tiles outside the view.
-  draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel = 1) {
+  draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, layer) {
     if (!this.spriteSheet || !this.spriteSheet.complete || !this.spriteFrame) return;
 
     const viewWidth = canvasWidth / zoomLevel;
@@ -76,27 +77,41 @@ class Block {
     const nextScreenY = Math.floor(((this.y + this.tileSize) - cameraY) * zoomLevel);
     const screenW = Math.max(1, nextScreenX - screenX);
     const screenH = Math.max(1, nextScreenY - screenY);
+    const screen3D = Math.floor(this.height * zoomLevel);
 
-    ctx.drawImage(
-      this.spriteSheet,
-      this.spriteFrame.x, this.spriteFrame.y, this.spriteFrame.w, this.spriteFrame.h,
-      screenX, screenY,
-      screenW, screenH
-    );
+    // 3d effect of block
+    if (layer == 4) {
+      ctx.filter = "brightness(60%)";
+      ctx.drawImage(
+        this.spriteSheet,
+        this.spriteFrame.x, this.spriteFrame.y, this.spriteFrame.w, this.spriteFrame.h,
+        screenX, screenY,
+        screenW, screenH
+      );
+      ctx.filter = "none";
+    }
 
-    // Highlight overlay (semi-transparent)
-    if (this.highlighted) {
-      ctx.fillStyle = 'rgba(255,255,255,0.20)';
-      ctx.fillRect(screenX, screenY, screenW, screenH);
-      // ctx.strokeStyle = 'rgba(0,100,200,0.6)';
-      // ctx.lineWidth = Math.max(1, Math.round(2 * zoomLevel));
-      // ctx.strokeRect(screenX + 0.5, screenY + 0.5, screenW - 1, screenH - 1);
+    // Block
+    if(layer == 5) {
+      ctx.drawImage(
+        this.spriteSheet,
+        this.spriteFrame.x, this.spriteFrame.y, this.spriteFrame.w, this.spriteFrame.h,
+        screenX - screen3D, screenY - screen3D,
+        screenW, screenH
+      );
     }
 
     // Draw the attached wire on top (if present)
-    if (this.wire) {
+    if (this.wire && layer == 6) {
       this.wire.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
     }
+
+    // Highlight overlay (semi-transparent)
+    if (this.highlighted && layer == 7) {
+      ctx.fillStyle = 'rgba(255,255,255,0.20)';
+      ctx.fillRect(screenX - screen3D, screenY - screen3D, screenW, screenH);
+    }
+
   }
 
   // Static helper: create Block instances from blocks section of data.json
@@ -119,6 +134,7 @@ class Block {
     const blocks = [];
     const width = blocksData.mapWidth;
     const offset = blocksData.spriteOffset;
+    const height = blocksData.height;
     let instanceId = 1;
     for (let i = 0; i < map.length; i++) {
       let spriteId = map[i];
@@ -127,7 +143,7 @@ class Block {
       const row = Math.floor(i / width);
       const col = i % width;
       const frame = frames[spriteId];
-      const block = new Block(instanceId, name, { x: col, y: row }, blocksImage, frame, tileSize, null);
+      const block = new Block(instanceId, name, { x: col, y: row }, blocksImage, frame, tileSize, null, height);
       instanceId += 1;
       blocks.push(block);
     }

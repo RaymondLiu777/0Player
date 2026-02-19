@@ -19,6 +19,7 @@ class Wire {
     this.tileSize = tileSize;
     this.x = location.x * this.tileSize;
     this.y = location.y * this.tileSize;
+    this.height = 0;
   }
 
   // Cycle to the next image in spriteImageIds
@@ -77,11 +78,13 @@ class Wire {
     const nextScreenY = Math.floor(((worldY + this.tileSize) - cameraY) * zoomLevel);
     const screenW = Math.max(1, nextScreenX - screenX);
     const screenH = Math.max(1, nextScreenY - screenY);
+    const screen3D = Math.floor(this.height * zoomLevel);
+    // const screen3D = 0;
 
     ctx.drawImage(
       this.spriteSheet,
       frame.x, frame.y, frame.w, frame.h,
-      screenX, screenY,
+      screenX - screen3D, screenY - screen3D,
       screenW, screenH
     );
   }

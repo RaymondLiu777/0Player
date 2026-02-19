@@ -65,7 +65,14 @@ class Stage {
       const sq = this.squares.find(s => s.x === w.x && s.y === w.y);
       if (sq) {
         sq.wire = w;
+        w.height = sq.height;
       } else {
+        const bgX = w.x / this.background.tileSize;
+        const bgY = w.y / this.background.tileSize;
+        const bgTileId = this.background.mapData[bgY][bgX];
+        if (bgTileId) {
+          w.height = this.background.spritemap[bgTileId].height;
+        }
         remainingWires.push(w);
       }
     }
@@ -282,13 +289,35 @@ class Stage {
   }
 
   draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel = 1) {
+    // Draw in layers 
+    // 0 = default floor tiling
+    // 1 = 3d effects of stage
+    // 2 = stage 
+    // 3 = stage wires
+    // 4 = 3d effects of blocks
+    // 5 = blocks
+    // 6 = blocks wires
+    // 7 = highlights
+
     if (this.background) {
-      this.background.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
+      this.background.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 0);
+      this.background.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 1);
+      this.background.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 2);
+      this.background.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 3);
     }
 
-    // Draw squares (their draw will also draw their attached wire)
+    // Draw squares
     for (const s of this.squares) {
-      s.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
+      s.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 4);
+    }
+    for (const s of this.squares) {
+      s.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 5);
+    }
+    for (const s of this.squares) {
+      s.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 6);
+    }
+    for (const s of this.squares) {
+      s.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel, 7);
     }
   }
 }
