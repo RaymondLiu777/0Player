@@ -300,6 +300,7 @@ class Stage {
     // Collect all drawable objects (tiles and blocks)
     const groundLayer = [];
     const drawables = [];
+    const highlightedBlocks = [];
 
     // Collect visible background tiles (height = 0 ground tiles)
     if (this.background) {
@@ -329,6 +330,9 @@ class Stage {
         continue; // Cull off-screen blocks
       }
       drawables.push({ type: 'block', obj: block, x: block.x, y: block.y });
+      if (block.highlighted) {
+        highlightedBlocks.push(block);
+      }
     }
 
     // Sort by x + y (isometric-like ordering: top-left to bottom-right)
@@ -383,5 +387,51 @@ class Stage {
         item.obj.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
       }
     }
+
+    // Draw highlight overlays for highlighted blocks
+    for (const block of highlightedBlocks) {
+      this.drawBlockHighlight(ctx, block, cameraX, cameraY, zoomLevel);
+    }
+  }
+
+  // Draw a mask-based highlight for a block that respects sprite edges
+  drawBlockHighlight(ctx, block, cameraX, cameraY, zoomLevel) {
+    if (!block.spriteSheet || !block.spriteSheet.complete || !block.spriteFrame) return;
+
+    const screenX = Math.floor((block.x - cameraX) * zoomLevel);
+    const screenY = Math.floor((block.y - cameraY) * zoomLevel);
+    const nextScreenX = Math.floor(((block.x + block.tileSize) - cameraX) * zoomLevel);
+    const nextScreenY = Math.floor(((block.y + block.tileSize) - cameraY) * zoomLevel);
+    const screenW = Math.max(1, nextScreenX - screenX);
+    const screenH = Math.max(1, nextScreenY - screenY);
+    const screen3D = Math.floor(block.height * zoomLevel);
+
+    // Create an off-screen canvas to use as a mask
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = screenW + screen3D;
+    maskCanvas.height = screenH + screen3D;
+    const maskCtx = maskCanvas.getContext('2d');
+
+    // Draw the sprite onto the mask canvas
+    maskCtx.drawImage(
+      block.spriteSheet,
+      block.spriteFrame.x, block.spriteFrame.y, block.spriteFrame.w, block.spriteFrame.h,
+      0, 0,
+      screenW, screenH
+    );
+
+    // Use the mask canvas to draw a white highlight overlay
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.35;
+    
+    // Draw highlight color through the mask
+    ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+    ctx.drawImage(maskCanvas, screenX - screen3D, screenY - screen3D);
+    
+    // Restore context state
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.restore();
   }
 }

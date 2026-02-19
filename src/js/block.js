@@ -92,12 +92,6 @@ class Block {
     if (this.wire) {
       this.wire.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
     }
-
-    // Highlight overlay (semi-transparent)
-    if (this.highlighted) {
-      ctx.fillStyle = 'rgba(255,255,255,0.20)';
-      ctx.fillRect(screenX - screen3D, screenY - screen3D, screenW, screenH);
-    }
   }
 
   // Static helper: create Block instances from blocks section of data.json
