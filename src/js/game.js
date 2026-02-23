@@ -11,13 +11,13 @@ canvas.height = 600;
 // Camera position
 let cameraX = 0;
 let cameraY = 0;
-let zoomLevel = 1; // 1 = 100%, 2 = 200%, etc.
-const minZoom = 0.5;
-const maxZoom = 3;
+let zoomLevel = .5; // 1 = 100%, 2 = 200%, etc.
+const minZoom = 0.3;
+const maxZoom = 1;
 const zoomSpeed = 0.1;
 
 // Movement settings
-const moveSpeed = 400; // pixels per second
+const moveSpeed = 600; // pixels per second
 const zoomSpeedPerSec = 1.0; // zoom units per second when holding Q/E
 
 // Mouse tracking for panning
@@ -215,7 +215,7 @@ function render() {
 let lastTime = performance.now();
 function gameLoop(timestamp = performance.now()) {
   const now = timestamp;
-  const dt = Math.min(0.05, (now - lastTime) / 1000); // clamp dt to avoid huge jumps
+  const dt = Math.min(0.033, (now - lastTime) / 1000); // clamp dt to avoid huge jumps
   lastTime = now;
 
   // Camera movement (WASD)
@@ -263,8 +263,8 @@ function gameLoop(timestamp = performance.now()) {
 // Clamp camera into stage bounds
 function clampCamera() {
   if (!stage || !stage.background) return;
-  const mapWidth = stage.background.width * stage.background.tileSize;
-  const mapHeight = stage.background.height * stage.background.tileSize;
+  const mapWidth = stage.background.width * stage.background.tileSize - 16;
+  const mapHeight = stage.background.height * stage.background.tileSize - 16;
   const viewWidth = canvas.width / zoomLevel;
   const viewHeight = canvas.height / zoomLevel;
   cameraX = Math.max(0, Math.min(cameraX, Math.max(0, mapWidth - viewWidth)));
@@ -276,7 +276,16 @@ function clampCamera() {
 async function initializeGame() {
   try {
     stage = new Stage(64);
-    await stage.load('assets/data.json');
+    await stage.load('data/data.json');
+
+    // start the view in the lower‑left corner of the map
+    cameraX = 0;
+    if (stage && stage.background) {
+      const mapPxH = stage.background.height * stage.background.tileSize;
+      cameraY = mapPxH - (canvas.height / zoomLevel);
+      clampCamera();
+    }
+
     lastTime = performance.now();
     gameLoop();
   } catch (error) {

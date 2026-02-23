@@ -97,6 +97,7 @@ class Gate extends Sprite {
       // vertical arm
       let positions = [];
       let r = row + vertDir;
+      let vUp = false;
       while (r >= 0 && r < height) {
         const idx = r * width + col;
         if (visited.has(idx)) break;
@@ -104,6 +105,9 @@ class Gate extends Sprite {
         if (!id) break;
         id -= offset;
         if (id <= blockCount) break;
+        if ((id - blockCount) % 2 === 1) {
+          vUp = true;
+        }
         visited.add(idx);
         positions.push({ col, row: r });
         r += vertDir;
@@ -129,7 +133,8 @@ class Gate extends Sprite {
           gatesData.height,
           tileSize,
           'vertical',
-          positions.length
+          positions.length,
+          vUp
         );
         arms.push(arm);
         instanceId += 1;
@@ -138,6 +143,7 @@ class Gate extends Sprite {
       // horizontal arm
       positions = [];
       let c = col + horizDir;
+      let hUp = false;
       while (c >= 0 && c < width) {
         const idx = row * width + c;
         if (visited.has(idx)) break;
@@ -145,6 +151,9 @@ class Gate extends Sprite {
         if (!id) break;
         id -= offset;
         if (id <= blockCount) break;
+        if ((id - blockCount) % 2 === 1) {
+          hUp = true;
+        }
         visited.add(idx);
         positions.push({ col: c, row });
         c += horizDir;
@@ -170,7 +179,8 @@ class Gate extends Sprite {
           gatesData.height,
           tileSize,
           'horizontal',
-          positions.length
+          positions.length,
+          hUp
         );
         arms.push(arm);
         instanceId += 1;
@@ -207,7 +217,6 @@ class GateArm extends Sprite {
     this.orientation = orientation;
     this.length = length;
     this.toggledUp = toggledUp;
-    console.log("gridSize", gridSize);
   }
 
   toggle() {

@@ -30,6 +30,19 @@ class Stage {
     const dataResp = await fetch(dataPath);
     const data = await dataResp.json();
 
+    // helper: if section.spriteMap is a string, fetch & JSON‑parse it
+    const resolveSpriteMap = async (section) => {
+      if (!section || typeof section.spriteMap !== 'string') return;
+      const resp = await fetch(section.spriteMap);
+      section.spriteMap = await resp.json();
+    };
+
+    // make sure each subsystem has its map array before we hand it off
+    await resolveSpriteMap(data.background);
+    await resolveSpriteMap(data.blocks);
+    await resolveSpriteMap(data.gates);
+    await resolveSpriteMap(data.wires);
+
     const loadImage = (src) => new Promise((res, rej) => {
       const img = new Image();
       img.onload = () => res(img);
@@ -47,7 +60,6 @@ class Stage {
 
     // --- Blocks / Squares ---
     const blocksImg = await loadImage(`assets/${data.blocks.spriteSheet}`);
-    // Provide mapWidth information so Block.fromData can compute proper row/col
     data.background.mapHeight = data.size.height;
     data.blocks.mapWidth = data.size.width;
     const squares = Block.fromData(data.blocks, blocksImg, this.tileSize);
@@ -65,7 +77,6 @@ class Stage {
 
     // --- Wires ---
     const wireImg = await loadImage(`assets/${data.wires.spriteSheet}`);
-    // Provide mapWidth to wire loader as well
     data.background.mapHeight = data.size.height;
     data.wires.mapWidth = data.size.width;
     const wires = Wire.fromData(data.wires, wireImg, this.tileSize);
