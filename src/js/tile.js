@@ -28,8 +28,8 @@ class Tile extends Sprite {
 
     const screenX = Math.floor((this.x - cameraX) * zoomLevel);
     const screenY = Math.floor((this.y - cameraY) * zoomLevel);
-    const nextScreenX = Math.floor(((this.x + this.tileSize) - cameraX) * zoomLevel);
-    const nextScreenY = Math.floor(((this.y + this.tileSize) - cameraY) * zoomLevel);
+    const nextScreenX = Math.floor(((this.x + this.tileSize.w) - cameraX) * zoomLevel);
+    const nextScreenY = Math.floor(((this.y + this.tileSize.h) - cameraY) * zoomLevel);
     const screenWidth = nextScreenX - screenX;
     const screenHeight = nextScreenY - screenY;
     const screen3D = Math.floor(this.height * zoomLevel);

@@ -31,8 +31,8 @@ class Block extends Sprite {
 
     const screenX = Math.floor((this.x - cameraX) * zoomLevel);
     const screenY = Math.floor((this.y - cameraY) * zoomLevel);
-    const nextScreenX = Math.floor(((this.x + this.tileSize) - cameraX) * zoomLevel);
-    const nextScreenY = Math.floor(((this.y + this.tileSize) - cameraY) * zoomLevel);
+    const nextScreenX = Math.floor(((this.x + this.tileSize.w) - cameraX) * zoomLevel);
+    const nextScreenY = Math.floor(((this.y + this.tileSize.h) - cameraY) * zoomLevel);
     const screenW = Math.max(1, nextScreenX - screenX);
     const screenH = Math.max(1, nextScreenY - screenY);
 
@@ -86,7 +86,7 @@ class Block extends Sprite {
       const row = Math.floor(i / width);
       const col = i % width;
       const frame = frames[spriteId];
-      const block = new Block(instanceId, { x: col, y: row }, blocksImage, frame, tileSize, height, null);
+      const block = new Block(instanceId, { x: col * tileSize, y: row * tileSize }, blocksImage, frame, tileSize, height, null);
       instanceId += 1;
       blocks.push(block);
     }

@@ -18,7 +18,11 @@ class Stage {
     this.hoverGroupId = null;
     this.hoverSingleId = null;
 
-    // snap threshold (pixels) for lenient snapping — adjustable
+    // gate state
+    this.gates = [];
+    this.gateArms = [];
+
+    // snap threshold for snapping horizontals/veritically
     this.snapThreshold = 12;
   }
 
@@ -26,7 +30,6 @@ class Stage {
     const dataResp = await fetch(dataPath);
     const data = await dataResp.json();
 
-    // Helper to load an image
     const loadImage = (src) => new Promise((res, rej) => {
       const img = new Image();
       img.onload = () => res(img);
@@ -52,6 +55,14 @@ class Stage {
     this.blockById = {};
     for (const b of this.squares) this.blockById[b.spriteId] = b;
 
+    // --- Gates ---
+    const gatesImg = await loadImage(`assets/${data.gates.spriteSheet}`);
+    data.gates.mapWidth = data.size.width;
+    data.gates.mapHeight = data.size.height;
+    const { gates, arms } = Gate.fromData(data.gates, gatesImg, this.tileSize);
+    this.gates = gates;
+    this.gateArms = arms;
+
     // --- Wires ---
     const wireImg = await loadImage(`assets/${data.wires.spriteSheet}`);
     // Provide mapWidth to wire loader as well
@@ -61,39 +72,65 @@ class Stage {
 
     // Attach wires to squares when co-located; remaining wires go to background tiles
     for (const w of wires) {
+      // attach any wires that landed on gates
+      const g = this.gates.find(g => g.x === w.x && g.y === w.y);
+      if (g) {
+        g.wire = w;
+        w.height = g.height;
+        continue;
+      }
+      // attach wires that landed on square
       const sq = this.squares.find(s => s.x === w.x && s.y === w.y);
       if (sq) {
         // Attach to block
         sq.wire = w;
         w.height = sq.height;
-      } else {
-        // Attach to background tile (check main tiles first, then ground tiles)
-        const col = Math.floor(w.x / this.tileSize);
-        const row = Math.floor(w.y / this.tileSize);
-        
-        let tile = null;
-        // Check main tiles first
-        if (row >= 0 && row < this.background.tiles.length && col >= 0 && col < this.background.tiles[row].length) {
-          tile = this.background.tiles[row][col];
-        }
-        // Fall back to ground tiles if main tile is empty/transparent
-        if (!tile || tile.spriteId === 0) {
-          if (row >= 0 && row < this.background.groundTiles.length && col >= 0 && col < this.background.groundTiles[row].length) {
-            tile = this.background.groundTiles[row][col];
-          }
-        }
-        
-        if (tile) {
-          tile.wire = w;
-          w.height = tile.height;
+        continue;
+      } 
+      // Attach to background tile (check main tiles first, then ground tiles)
+      const col = Math.floor(w.x / this.tileSize);
+      const row = Math.floor(w.y / this.tileSize);
+      
+      let tile = null;
+      // Check main tiles first
+      if (row >= 0 && row < this.background.tiles.length && col >= 0 && col < this.background.tiles[row].length) {
+        tile = this.background.tiles[row][col];
+      }
+      // Fall back to ground tiles if main tile is empty/transparent
+      if (!tile || tile.spriteId === 0) {
+        if (row >= 0 && row < this.background.groundTiles.length && col >= 0 && col < this.background.groundTiles[row].length) {
+          tile = this.background.groundTiles[row][col];
         }
       }
+      
+      if (tile) {
+        tile.wire = w;
+        w.height = tile.height;
+      }
     }
+
     return this;
   }
 
-  // Check squares first (top-most last), toggle wire if present; otherwise check un-attached wires
+  // Check gates first, then gates, then background for toggles
   isClicked(mapX, mapY) {
+    // gate‑arms take top priority
+    for (const arm of this.gateArms) {
+      if (arm.isClicked(mapX, mapY)) {
+        arm.toggle();
+        return arm;
+      }
+    }
+
+    // then gate blocks
+    for (const g of this.gates) {
+      if (g.isClicked(mapX, mapY)) {
+        if (g.toggle()) return g.wire;
+        return g;
+      }
+    }
+
+    // previous logic for squares and background
     for (let i = this.squares.length - 1; i >= 0; i--) {
       const s = this.squares[i];
       if (s.isClicked(mapX, mapY)) {
@@ -107,7 +144,6 @@ class Stage {
       const w = this.background.isClicked(mapX, mapY);
       if (w) return w;
     }
-
     return null;
   }
 
@@ -212,12 +248,12 @@ class Stage {
   // snapToGrid boolean controls grid snapping; lenient snapping uses this.snapThreshold.
   updateDrag(mapX, mapY, snapToGrid = true) {
     if (!this.draggingBlock) return;
-    const tileSize = this.draggingBlock.tileSize || this.tileSize;
+    const tileSize = this.draggingBlock.tileSize;
 
     const applyLenientSnap = (rawX, rawY) => {
       // nearest tile-aligned positions
-      const nearestX = Math.round(rawX / tileSize) * tileSize;
-      const nearestY = Math.round(rawY / tileSize) * tileSize;
+      const nearestX = Math.round(rawX / tileSize.w) * tileSize.w;
+      const nearestY = Math.round(rawY / tileSize.h) * tileSize.h;
       const dx = Math.abs(rawX - nearestX);
       const dy = Math.abs(rawY - nearestY);
 
@@ -273,14 +309,6 @@ class Stage {
       targetY = Math.round(rawTargetY);
     }
 
-    // Optionally clamp to stage bounds if available
-    if (this.background) {
-      const mapWidth = this.background.width * tileSize;
-      const mapHeight = this.background.height * tileSize;
-      targetX = Math.max(0, Math.min(targetX, Math.max(0, mapWidth - tileSize)));
-      targetY = Math.max(0, Math.min(targetY, Math.max(0, mapHeight - tileSize)));
-    }
-
     this.draggingBlock.setWorldPosition(targetX, targetY);
   }
 
@@ -325,14 +353,28 @@ class Stage {
     const viewWidth = canvasWidth / zoomLevel;
     const viewHeight = canvasHeight / zoomLevel;
     for (const block of this.squares) {
-      if (block.x + block.tileSize < cameraX || block.x > cameraX + viewWidth ||
-          block.y + block.tileSize < cameraY || block.y > cameraY + viewHeight) {
+      if (block.x + block.tileSize.w < cameraX || block.x > cameraX + viewWidth ||
+          block.y + block.tileSize.h < cameraY || block.y > cameraY + viewHeight) {
         continue; // Cull off-screen blocks
       }
       drawables.push({ type: 'block', obj: block, x: block.x, y: block.y });
       if (block.highlighted) {
         highlightedBlocks.push(block);
       }
+    }
+
+    // gates behave like blocks for z‑ordering
+    for (const gate of this.gates) {
+      if (gate.x + gate.tileSize.w < cameraX || gate.x > cameraX + viewWidth ||
+          gate.y + gate.tileSize.h < cameraY || gate.y > cameraY + viewHeight) {
+        continue;
+      }
+      drawables.push({ type: 'gate', obj: gate, x: gate.x, y: gate.y });
+    }
+
+    // arms can be drawn anywhere; we don’t bother to cull them here
+    for (const arm of this.gateArms) {
+      drawables.push({ type: 'arm', obj: arm, x: arm.x, y: arm.y});
     }
 
     // Sort by x + y (isometric-like ordering: top-left to bottom-right)
@@ -347,32 +389,32 @@ class Stage {
     // Draw all objects in sorted order, handling tile-block collisions
     const drawnTiles = new Set();
     for (const item of drawables) {
-      if (item.type === 'tile') {
+      if (item.type === 'tile' || item.type === 'gate' ) {
         if (drawnTiles.has(item.obj)) {
           continue;
         }
         drawnTiles.add(item.obj);
         item.obj.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
-      } else if (item.type === 'block') {
-        // Check if this block collides with any undrawn tiles
+      } else if (item.type === 'block' || item.type === 'arm') {
+        const obj = item.obj;
         const blockBounds = {
-          x1: item.obj.x,
-          y1: item.obj.y,
-          x2: item.obj.x + item.obj.tileSize,
-          y2: item.obj.y + item.obj.tileSize
+          x1: obj.x,
+          y1: obj.y,
+          x2: obj.x + obj.tileSize.w,
+          y2: obj.y + obj.tileSize.h
         };
 
         // Draw any colliding tiles that haven't been drawn yet
         if (this.background) {
           const startCol = Math.floor(blockBounds.x1 / this.tileSize);
-          const endCol = Math.ceil(blockBounds.x2 / this.tileSize);
+          const endCol   = Math.ceil(blockBounds.x2 / this.tileSize);
           const startRow = Math.floor(blockBounds.y1 / this.tileSize);
-          const endRow = Math.ceil(blockBounds.y2 / this.tileSize);
+          const endRow   = Math.ceil(blockBounds.y2 / this.tileSize);
 
           for (let row = startRow; row < endRow; row++) {
             for (let col = startCol; col < endCol; col++) {
-              // Check main tiles
-              if (row >= 0 && row < this.background.tiles.length && col >= 0 && col < this.background.tiles[row].length) {
+              if (row >= 0 && row < this.background.tiles.length &&
+                  col >= 0 && col < this.background.tiles[row].length) {
                 const tile = this.background.tiles[row][col];
                 if (tile && !drawnTiles.has(tile)) {
                   drawnTiles.add(tile);
@@ -382,8 +424,8 @@ class Stage {
             }
           }
         }
-
-        // Draw the block
+        obj.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
+      } else if (item.type === 'arm') {
         item.obj.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
       }
     }
@@ -400,8 +442,8 @@ class Stage {
 
     const screenX = Math.floor((block.x - cameraX) * zoomLevel);
     const screenY = Math.floor((block.y - cameraY) * zoomLevel);
-    const nextScreenX = Math.floor(((block.x + block.tileSize) - cameraX) * zoomLevel);
-    const nextScreenY = Math.floor(((block.y + block.tileSize) - cameraY) * zoomLevel);
+    const nextScreenX = Math.floor(((block.x + block.tileSize.w) - cameraX) * zoomLevel);
+    const nextScreenY = Math.floor(((block.y + block.tileSize.h) - cameraY) * zoomLevel);
     const screenW = Math.max(1, nextScreenX - screenX);
     const screenH = Math.max(1, nextScreenY - screenY);
     const screen3D = Math.floor(block.height * zoomLevel);

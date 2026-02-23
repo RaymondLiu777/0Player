@@ -62,7 +62,7 @@ class Wire extends Sprite {
       const framesList = spriteImageIds.map(id => frames[id]).filter(f => f);
       const idxInSet = spriteImageIds.indexOf(imageId);
       const startIndex = idxInSet >= 0 ? idxInSet : 0;
-      const wire = new Wire(instanceId, { x: col, y: row }, wireImage, tileSize, 0, framesList, startIndex);
+      const wire = new Wire(instanceId, { x: col * tileSize, y: row * tileSize}, wireImage, tileSize, 0, framesList, startIndex);
       instanceId += 1;
       wires.push(wire);
     }

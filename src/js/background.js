@@ -53,7 +53,7 @@ class Background {
       for (let col = 0; col < this.width; col++) {
         const groundTile = new Tile(
           bgTileId,
-          { x: col, y: row },
+          { x: col * this.tileSize, y: row * this.tileSize },
           image,
           bgFrame,
           this.tileSize,
@@ -78,7 +78,7 @@ class Background {
 
         const tile = new Tile(
           spriteId,
-          { x: col, y: row },
+          { x: col * this.tileSize, y: row * this.tileSize},
           image,
           spriteFrame,
           this.tileSize,

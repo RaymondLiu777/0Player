@@ -4,15 +4,18 @@ class Sprite {
    * @param {HTMLImageElement} spriteSheet
    * @param {{x,y,w,h}} spriteFrame
    * @param {{x:number,y:number}} location – tile coordinates (in the grid, not actual x and y)
-   * @param {number} tileSize
+   * @param {number|{w:number,h:number}} tileSize
    * @param {number} height
    */
-  constructor(spriteId, spriteSheet, spriteFrame, location, tileSize = 64, height = 0) {
+  constructor(spriteId, spriteSheet, spriteFrame, location, tileSize, height) {
     this.spriteId = spriteId;
     this.spriteSheet = spriteSheet;
     this.spriteFrame = spriteFrame;
-    this.x = location.x * tileSize;
-    this.y = location.y * tileSize;
+    this.x = location.x;
+    this.y = location.y;
+    if (typeof tileSize === 'number') {
+        tileSize = {'w': tileSize, 'h': tileSize};
+    }
     this.tileSize = tileSize;
     this.height = height;
   }
@@ -24,24 +27,23 @@ class Sprite {
   isClicked(mapX, mapY) {
     return (
       mapX >= this.x - this.height &&
-      mapX < this.x + this.tileSize - this.height &&
+      mapX < this.x + this.tileSize.w - this.height &&
       mapY >= this.y - this.height &&
-      mapY < this.y + this.tileSize - this.height
+      mapY < this.y + this.tileSize.h - this.height
     );
   }
 
   // simple draw; subclasses can wrap/extend
-  draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel = 1) {
+  draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel) {
     if (!this.spriteSheet || !this.spriteSheet.complete || !this.spriteFrame) return;
 
     const screenX = Math.floor((this.x - cameraX) * zoomLevel);
     const screenY = Math.floor((this.y - cameraY) * zoomLevel);
-    const nextScreenX = Math.floor(((this.x + this.tileSize) - cameraX) * zoomLevel);
-    const nextScreenY = Math.floor(((this.y + this.tileSize) - cameraY) * zoomLevel);
+    const nextScreenX = Math.floor(((this.x + this.tileSize.w) - cameraX) * zoomLevel);
+    const nextScreenY = Math.floor(((this.y + this.tileSize.h) - cameraY) * zoomLevel);
     const screenW = Math.max(1, nextScreenX - screenX);
     const screenH = Math.max(1, nextScreenY - screenY);
     const screen3D = Math.floor(this.height * zoomLevel);
-
     ctx.drawImage(
       this.spriteSheet,
       this.spriteFrame.x, this.spriteFrame.y, this.spriteFrame.w, this.spriteFrame.h,
