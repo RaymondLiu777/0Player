@@ -70,6 +70,65 @@
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     ]
   },
+  "gates": {
+    "spriteSheet": "gateblock.png",
+    "blocksprites": {
+      "gateblocksw": {
+        "x": 0,
+        "y": 0,
+        "h": 80,
+        "w": 80
+      },
+      "gateblocknw": {
+        "x": 80,
+        "y": 0,
+        "h": 80,
+        "w": 80
+      },
+      "gateblockne": {
+        "x": 0,
+        "y": 80,
+        "h": 80,
+        "w": 80
+      },
+      "gateblockse": {
+        "x": 80,
+        "y": 80,
+        "h": 80,
+        "w": 80
+      }
+    },
+    "gatesprites": {
+      "horizontal": {
+        "up": {
+          "x": 0,
+          "y": 160,
+          "h": 18,
+          "w": 80
+        },
+        "down": {
+          "x": 80,
+          "y": 160,
+          "h": 80,
+          "w": 18
+        }
+      },
+      "vertical": {
+        "up": {
+          "x": 0,
+          "y": 240,
+          "h": 18,
+          "w": 80
+        },
+        "down": {
+          "x": 80,
+          "y": 240,
+          "h": 80,
+          "w": 18
+        }
+      }
+    }
+  },
   "wires" : {
     "spriteSheet": "wires.png",
     "spriteSheetSize": {
