@@ -1,37 +1,20 @@
-class Tile {
+class Tile extends Sprite {
   /**
-   * @param {number} spriteId - numeric id of the tile texture (from data)
-   * @param {{x:number,y:number}} location - tile coords (col,row)
-   * @param {HTMLImageElement} spriteSheet - image containing tile textures
-   * @param {{x,y,w,h}} spriteFrame - single frame on the spritesheet for this tile
-   * @param {number} tileSize - size of a tile in pixels
-   * @param {string|null} category - 3D category (wall/barrier/ground) or null
-   * @param {number} height - 3D height value
-   * @param {Wire|null} wire - optional Wire instance attached to this tile
+   * @param {number} spriteId
+   * @param {{x:number,y:number}} location (in the grid, not actual x and y)
+   * @param {HTMLImageElement} spriteSheet
+   * @param {{x,y,w,h}} spriteFrame
+   * @param {number} tileSize
+   * @param {number} height
+   * @param {string|null} category
+   * @param {Wire|null} wire
    */
-  constructor(spriteId, location, spriteSheet, spriteFrame, tileSize = 64, category = null, height = 0, wire = null) {
-    this.spriteId = spriteId;
-    this.x = location.x * tileSize; // world pixels
-    this.y = location.y * tileSize;
-    this.tileSize = tileSize;
-    this.spriteSheet = spriteSheet;
-    this.spriteFrame = spriteFrame;
+  constructor(spriteId, location, spriteSheet, spriteFrame, tileSize, height, category, wire) {
+    super(spriteId, spriteSheet, spriteFrame, location, tileSize, height);
     this.category = category;
-    this.height = height;
     this.wire = wire;
   }
 
-  // Check if map coordinates fall inside this tile
-  isClicked(mapX, mapY) {
-    return (
-      mapX >= this.x - this.height &&
-      mapX < this.x + this.tileSize - this.height &&
-      mapY >= this.y - this.height &&
-      mapY < this.y + this.tileSize - this.height
-    );
-  }
-
-  // If there's a wire attached, toggle it
   toggle() {
     if (this.wire) {
       this.wire.toggle();
@@ -40,7 +23,6 @@ class Tile {
     return false;
   }
 
-  // Draw the entire tile (base layer + shadow/3D + sprite + wire)
   draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel) {
     if (!this.spriteSheet || !this.spriteSheet.complete || !this.spriteFrame) return;
 
@@ -52,8 +34,7 @@ class Tile {
     const screenHeight = nextScreenY - screenY;
     const screen3D = Math.floor(this.height * zoomLevel);
 
-    // Draw shadow/3D effect
-    if (this.category == 'barrier') {
+    if (this.category === 'barrier') {
       ctx.filter = "brightness(60%)";
       ctx.drawImage(
         this.spriteSheet,
@@ -62,7 +43,7 @@ class Tile {
         screenWidth, screenHeight
       );
       ctx.filter = "none";
-    } else if (this.category == 'wall') {
+    } else if (this.category === 'wall') {
       // Right side
       const gradright = ctx.createLinearGradient(screenX + screenWidth - screen3D, screenY, screenX + screenWidth, screenY);
       gradright.addColorStop(0, "rgba(47, 47, 47)");
@@ -89,15 +70,8 @@ class Tile {
       ctx.fill();
     }
 
-    // Draw actual tile sprite offset by 3D effect
-    ctx.drawImage(
-      this.spriteSheet,
-      this.spriteFrame.x, this.spriteFrame.y, this.spriteFrame.w, this.spriteFrame.h,
-      screenX - screen3D, screenY - screen3D,
-      screenWidth, screenHeight
-    );
+    super.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
 
-    // Draw attached wire
     if (this.wire) {
       this.wire.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
     }

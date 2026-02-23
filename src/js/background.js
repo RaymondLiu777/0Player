@@ -57,8 +57,8 @@ class Background {
           image,
           bgFrame,
           this.tileSize,
-          bgCategory,
           bgHeight,
+          bgCategory,
           null
         );
         rowData.push(groundTile);
@@ -82,8 +82,8 @@ class Background {
           image,
           spriteFrame,
           this.tileSize,
-          category,
           height,
+          category,
           null // wire (can be added later if needed)
         );
         rowData.push(tile);

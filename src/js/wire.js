@@ -1,95 +1,33 @@
-class Wire {
+class Wire extends Sprite {
   /**
-   * @param {number} spriteId - unique id for this wire instance (or id you want)
-   * @param {string} spriteName - name/key of the wire sprite set
-   * @param {{x:number,y:number}} location - tile coords (col,row)
-   * @param {HTMLImageElement} spriteSheet - spritesheet image
-   * @param {Array<number>} spriteImageIds - array of frame ids used by this wire name
-   * @param {number} currentImageIndex - index into spriteImageIds
-   * @param {Object} spriteFrames - mapping id->{x,y,w,h}
-   * @param {number} tileSize - tile size in pixels
+   * @param {number} spriteId
+   * @param {{x:number,y:number}} location
+   * @param {HTMLImageElement} spriteSheet
+   * @param {number} tileSize
+   * @param {number} height
+   * @param {Array<{x,y,w,h}>} framesList
+   * @param {number} currentIndex
    */
-  constructor(spriteId, spriteName, location, spriteSheet, spriteImageIds = [], currentImageIndex = 0, spriteFrames = {}, tileSize = 64) {
-    this.spriteId = spriteId;
-    this.spriteName = spriteName;
-    this.spriteSheet = spriteSheet;
-    this.spriteImageIds = spriteImageIds;
-    this.currentImageIndex = Math.max(0, Math.min(currentImageIndex, this.spriteImageIds.length - 1));
-    this.spriteFrames = spriteFrames;
-    this.tileSize = tileSize;
-    this.x = location.x * this.tileSize;
-    this.y = location.y * this.tileSize;
-    this.height = 0;
+  constructor(spriteId, location, spriteSheet, tileSize, height, framesList, currentIndex) {
+    const startIndex = Math.max(0, Math.min(currentIndex, framesList.length - 1));
+    const initialFrame = framesList[startIndex] || null;
+    super(spriteId, spriteSheet, initialFrame, location, tileSize, height);
+
+    this.framesList = framesList;
+    this.currentIndex = startIndex;
   }
 
-  // Cycle to the next image in spriteImageIds
   toggle() {
-    if (!this.spriteImageIds.length) return;
-    this.currentImageIndex = (this.currentImageIndex + 1) % this.spriteImageIds.length;
+    if (!this.framesList.length) return;
+    this.currentIndex = (this.currentIndex + 1) % this.framesList.length;
+    this.spriteFrame = this.framesList[this.currentIndex];
   }
 
-  // Set wire world position (in pixels)
   setWorldPosition(worldX, worldY) {
     this.x = Math.round(worldX);
     this.y = Math.round(worldY);
   }
 
-  // Returns true if the given map pixel coordinates (mapX, mapY) fall inside this wire's tile hitbox
-  isClicked(mapX, mapY) {
-    const worldX = this.x;
-    const worldY = this.y;
-    return (
-      mapX >= worldX - this.height &&
-      mapX < worldX + this.tileSize - this.height &&
-      mapY >= worldY - this.height &&
-      mapY < worldY + this.tileSize - this.height
-    );
-  }
-
-  /**
-   * Draw the wire to the screen.
-   * ctx: CanvasRenderingContext2D
-   * cameraX/cameraY: world pixel camera position
-   * canvasWidth/canvasHeight: size of canvas in pixels
-   * zoomLevel: scale factor (1 = 1:1)
-   */
-  draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel = 1) {
-    if (!this.spriteSheet || !this.spriteSheet.complete) return;
-    if (!this.spriteImageIds.length) return;
-
-    const frameId = this.spriteImageIds[this.currentImageIndex];
-    const frame = this.spriteFrames[frameId];
-    if (!frame) return;
-
-    const worldX = this.x;
-    const worldY = this.y;
-
-    // Cull if outside view (use world coords + view size adjusted by zoom)
-    const viewWidth = canvasWidth / zoomLevel;
-    const viewHeight = canvasHeight / zoomLevel;
-    if (worldX + this.tileSize < cameraX || worldX > cameraX + viewWidth ||
-        worldY + this.tileSize < cameraY || worldY > cameraY + viewHeight) {
-      return;
-    }
-
-    const screenX = Math.floor((worldX - cameraX) * zoomLevel);
-    const screenY = Math.floor((worldY - cameraY) * zoomLevel);
-    const nextScreenX = Math.floor(((worldX + this.tileSize) - cameraX) * zoomLevel);
-    const nextScreenY = Math.floor(((worldY + this.tileSize) - cameraY) * zoomLevel);
-    const screenW = Math.max(1, nextScreenX - screenX);
-    const screenH = Math.max(1, nextScreenY - screenY);
-    const screen3D = Math.floor(this.height * zoomLevel);
-    // const screen3D = 0;
-
-    ctx.drawImage(
-      this.spriteSheet,
-      frame.x, frame.y, frame.w, frame.h,
-      screenX - screen3D, screenY - screen3D,
-      screenW, screenH
-    );
-  }
-
-  // Static helper: create Wire instances from wires section of data.json
   static fromData(wiresData, wireImage, tileSize = 64) {
     const cols = wiresData.spriteSheetSize.columns;
     const rows = wiresData.spriteSheetSize.rows;
@@ -102,7 +40,6 @@ class Wire {
       frames[id] = { x: col * tileSize, y: row * tileSize, w: tileSize, h: tileSize };
     }
 
-    // build id -> name mapping (ids listed inside arrays)
     const idToName = {};
     for (const [name, ids] of Object.entries(wiresData.spriteIds || {})) {
       (ids || []).forEach(id => idToName[id] = name);
@@ -122,9 +59,10 @@ class Wire {
       const spriteName = idToName[imageId];
       if (!spriteName) continue;
       const spriteImageIds = wiresData.spriteIds[spriteName] || [];
+      const framesList = spriteImageIds.map(id => frames[id]).filter(f => f);
       const idxInSet = spriteImageIds.indexOf(imageId);
       const startIndex = idxInSet >= 0 ? idxInSet : 0;
-      const wire = new Wire(instanceId, spriteName, { x: col, y: row }, wireImage, spriteImageIds, startIndex, frames, tileSize);
+      const wire = new Wire(instanceId, { x: col, y: row }, wireImage, tileSize, 0, framesList, startIndex);
       instanceId += 1;
       wires.push(wire);
     }
