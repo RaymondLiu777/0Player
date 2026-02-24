@@ -47,7 +47,7 @@ class Tile extends Sprite {
       // Right side
       const gradright = ctx.createLinearGradient(screenX + screenWidth - screen3D, screenY, screenX + screenWidth, screenY);
       gradright.addColorStop(0, "rgba(47, 47, 47)");
-      gradright.addColorStop(1, "rgba(0,0,0)");
+      gradright.addColorStop(1, "rgba(20,20,20)");
       ctx.fillStyle = gradright;
       ctx.beginPath();
       ctx.moveTo(screenX + screenWidth - screen3D, screenY - screen3D);
@@ -59,7 +59,7 @@ class Tile extends Sprite {
       // Bottom side
       const grad = ctx.createLinearGradient(screenX, screenY + screenHeight - screen3D, screenX, screenY + screenHeight);
       grad.addColorStop(0, "rgba(47, 47, 47)");
-      grad.addColorStop(1, "rgba(0,0,0)");
+      grad.addColorStop(1, "rgba(20,20,20)");
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.moveTo(screenX - screen3D, screenY + screenHeight - screen3D);

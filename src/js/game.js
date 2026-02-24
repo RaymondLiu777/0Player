@@ -258,6 +258,10 @@ function gameLoop(timestamp = performance.now()) {
 
   render();
   requestAnimationFrame(gameLoop);
+
+  // const done = performance.now();
+  // const renderTime = (done - now) / 1000;
+  // console.log(renderTime);
 }
 
 // Clamp camera into stage bounds

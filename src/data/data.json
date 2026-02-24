@@ -3,7 +3,7 @@
   "background": {
     "spriteSheet": "background.png",
     "spriteSheetSize": {
-      "rows": 8, "columns": 8, "count": 58
+      "rows": 8, "columns": 8, "count": 60
     },
     "3d": {
       "wall": {
@@ -19,7 +19,7 @@
         "height": 0
       }
     },
-    "bgTile": 57,
+    "bgTile": 59,
     "spriteMap": "data/bg-map.json"
   },
   "blocks": {
