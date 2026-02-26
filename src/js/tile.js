@@ -13,6 +13,8 @@ class Tile extends Sprite {
     super(spriteId, spriteSheet, spriteFrame, location, tileSize, height);
     this.category = category;
     this.wire = wire;
+    // whether there is another wall immediately to the right/bottom
+    this.hide3D = { right: false, bottom: false };
   }
 
   toggle() {
@@ -44,30 +46,35 @@ class Tile extends Sprite {
       );
       ctx.filter = "none";
     } else if (this.category === 'wall') {
-      // Right side
-      const gradright = ctx.createLinearGradient(screenX + screenWidth - screen3D, screenY, screenX + screenWidth, screenY);
-      gradright.addColorStop(0, "rgba(47, 47, 47)");
-      gradright.addColorStop(1, "rgba(20,20,20)");
-      ctx.fillStyle = gradright;
-      ctx.beginPath();
-      ctx.moveTo(screenX + screenWidth - screen3D, screenY - screen3D);
-      ctx.lineTo(screenX + screenWidth, screenY);
-      ctx.lineTo(screenX + screenWidth, screenY + screenHeight);
-      ctx.lineTo(screenX + screenWidth - screen3D, screenY + screenHeight - screen3D);
-      ctx.closePath();
-      ctx.fill();
-      // Bottom side
-      const grad = ctx.createLinearGradient(screenX, screenY + screenHeight - screen3D, screenX, screenY + screenHeight);
-      grad.addColorStop(0, "rgba(47, 47, 47)");
-      grad.addColorStop(1, "rgba(20,20,20)");
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.moveTo(screenX - screen3D, screenY + screenHeight - screen3D);
-      ctx.lineTo(screenX, screenY + screenHeight);
-      ctx.lineTo(screenX + screenWidth, screenY + screenHeight);
-      ctx.lineTo(screenX + screenWidth - screen3D, screenY + screenHeight - screen3D);
-      ctx.closePath();
-      ctx.fill();
+      // only draw a side if there isn't another wall adjacent
+      if (!this.hide3D.right) {
+        // Right side
+        const gradright = ctx.createLinearGradient(screenX + screenWidth - screen3D, screenY, screenX + screenWidth, screenY);
+        gradright.addColorStop(0, "rgba(47, 47, 47)");
+        gradright.addColorStop(1, "rgba(20,20,20)");
+        ctx.fillStyle = gradright;
+        ctx.beginPath();
+        ctx.moveTo(screenX + screenWidth - screen3D, screenY - screen3D);
+        ctx.lineTo(screenX + screenWidth, screenY);
+        ctx.lineTo(screenX + screenWidth, screenY + screenHeight);
+        ctx.lineTo(screenX + screenWidth - screen3D, screenY + screenHeight - screen3D);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if (!this.hide3D.bottom) {
+        // Bottom side
+        const grad = ctx.createLinearGradient(screenX, screenY + screenHeight - screen3D, screenX, screenY + screenHeight);
+        grad.addColorStop(0, "rgba(47, 47, 47)");
+        grad.addColorStop(1, "rgba(20,20,20)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(screenX - screen3D, screenY + screenHeight - screen3D);
+        ctx.lineTo(screenX, screenY + screenHeight);
+        ctx.lineTo(screenX + screenWidth, screenY + screenHeight);
+        ctx.lineTo(screenX + screenWidth - screen3D, screenY + screenHeight - screen3D);
+        ctx.closePath();
+        ctx.fill();
+      }
     }
 
     super.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);

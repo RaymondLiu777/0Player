@@ -58,7 +58,9 @@ class Background {
         const category = sprite3D ? sprite3D.category : null;
         const height = sprite3D ? sprite3D.height : 0;
 
-        const tile = new Tile(
+        console.log(spriteId);
+
+        const tile = spriteId == 0 ? null : new Tile(
           spriteId,
           { x: col * this.tileSize, y: row * this.tileSize},
           image,
@@ -88,14 +90,29 @@ class Background {
       this.groundTiles.push(rowGroundData);
     }
 
-    let groundTileCount = 0;
-    for (let row = 0; row < this.groundTiles.length; row++) {
-      for (let col = 0; col < this.groundTiles[row].length; col++) {
-        if(this.groundTiles[row][col] != null) {
-          groundTileCount += 1;
+    // --- initialise hide3D for any wall tiles ---
+    for (let row = 0; row < this.height; row++) {
+      for (let col = 0; col < this.width; col++) {
+        const tile = this.tiles[row][col];
+        if (tile && tile.category === 'wall') {
+          // if there's a wall immediately to the right, hide the right face
+          if (col + 1 < this.width) {
+            const right = this.tiles[row][col + 1];
+            if (right && right.category === 'wall') {
+              tile.hide3D.right = true;
+            }
+          }
+          // if there's a wall immediately below, hide the bottom face
+          if (row + 1 < this.height) {
+            const down = this.tiles[row + 1][col];
+            if (down && down.category === 'wall') {
+              tile.hide3D.bottom = true;
+            }
+          }
         }
       }
     }
+
     return this;
   }
 
@@ -105,7 +122,7 @@ class Background {
     const row = Math.floor(mapY / this.tileSize);
     if (row >= 0 && row < this.tiles.length && col >= 0 && col < this.tiles[row].length) {
       const tile = this.tiles[row][col];
-      if (tile.isClicked(mapX, mapY)) {
+      if (tile && tile.isClicked(mapX, mapY)) {
         if (tile.toggle()) return tile.wire;
       }
     }
