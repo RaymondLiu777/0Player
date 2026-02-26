@@ -1,49 +1,24 @@
 # 0Player Game
 
-## Overview
-0Player is a simple game inspired by the concept of a static image game. The game runs in the browser and utilizes HTML, CSS, and JavaScript to create an engaging experience.
+This is a semi-interactive recreation of the static image [0PLAYER](https://plus.cerisetalis.com/0PLAYER/) game. I would highly recommend checking it out!
 
-## Project Structure
-```
-0player-game
-├── src
-│   ├── index.html          # Main HTML document for the game
-│   ├── css
-│   │   └── styles.css      # Styles for the game
-│   ├── js
-│   │   ├── game.js         # Main game logic
-│   │   ├── player.js       # Player class and methods
-│   │   └── utils.js        # Utility functions
-│   └── assets
-│       └── data.json       # Game data in JSON format
-├── README.md               # Project documentation
-└── package.json            # npm configuration file
-```
+## What does semi-interactive mean?
+The original game was just a static image and meant to be played in a image editor. This is just a browser based recreation that minics many of the features you'd want in a image editor.
 
-## Getting Started
+This recreation of the game has:
+- Draggable tiles
+- Toggleable wires
+- Snap to Grid Quality of Life (can be disabled)
+- Tile grouping (Connected tiles are not automatically grouped)
 
-### Prerequisites
-- Ensure you have [Node.js](https://nodejs.org/) installed on your machine.
+This recreation of the does NOT have:
+- Any implementation of mechanics
+- Some late game discoveries that would be too easy to stumble across if implemented
+- The original art (some details my be missing)
 
-### Installation
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   ```
-2. Navigate to the project directory:
-   ```
-   cd 0player-game
-   ```
-3. Install the dependencies:
-   ```
-   npm install
-   ```
-
-### Running the Game
-To start the game, open `src/index.html` in your web browser. The game will load and you can begin playing.
-
-### Contributing
-If you would like to contribute to the project, feel free to submit a pull request or open an issue for discussion.
-
-### License
-This project is licensed under the MIT License. See the LICENSE file for details.
+## Controls for the image editor (not for the game)
+- WASD/Drag Scroll Wheel: Move camera
+- QE/Scroll Wheel: Zoom in and zoom out
+- Left Click + Drag: Move tiles
+- Right click: Toggle sprite
+- Hold G + Left Click: Group/Ungroup tiles (Grouped tiles move together, selecting a tile ungroups it from previous group)
