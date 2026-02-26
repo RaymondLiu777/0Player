@@ -221,10 +221,10 @@ function gameLoop(timestamp = performance.now()) {
   // Camera movement (WASD)
   let movedX = 0;
   let movedY = 0;
-  if (keys.w) { movedY -= moveSpeed * dt; }
-  if (keys.s) { movedY += moveSpeed * dt; }
-  if (keys.a) { movedX -= moveSpeed * dt; }
-  if (keys.d) { movedX += moveSpeed * dt; }
+  if (keys.w) { movedY -= moveSpeed * (1/zoomLevel) * dt; }
+  if (keys.s) { movedY += moveSpeed * (1/zoomLevel) * dt; }
+  if (keys.a) { movedX -= moveSpeed * (1/zoomLevel) * dt; }
+  if (keys.d) { movedX += moveSpeed * (1/zoomLevel) * dt; }
   if (movedX !== 0 || movedY !== 0) {
     cameraX += movedX;
     cameraY += movedY;
@@ -255,13 +255,16 @@ function gameLoop(timestamp = performance.now()) {
     const pos = getMapCoordsFromClient(lastMouseX, lastMouseY);
     stage.updateDrag(pos.x, pos.y, snapToGrid);
   }
-
+  
+  const startRender = performance.now();
   render();
+  const endRender = performance.now();
+  
   requestAnimationFrame(gameLoop);
 
-  // const done = performance.now();
-  // const renderTime = (done - now) / 1000;
-  // console.log(renderTime);
+  const done = performance.now();
+  const frameTime = (done - now);
+  // console.log("Total time: ", frameTime, "Render time: ", endRender - startRender);
 }
 
 // Clamp camera into stage bounds

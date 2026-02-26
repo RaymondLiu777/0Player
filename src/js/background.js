@@ -47,28 +47,10 @@ class Background {
     const bgCategory = bgSprite3D ? bgSprite3D.category : null;
     const bgHeight = bgSprite3D ? bgSprite3D.height : 0;
 
-    // Create 2D array of ground tiles (base layer under everything)
-    for (let row = 0; row < this.height; row++) {
-      const rowData = [];
-      for (let col = 0; col < this.width; col++) {
-        const groundTile = new Tile(
-          bgTileId,
-          { x: col * this.tileSize, y: row * this.tileSize },
-          image,
-          bgFrame,
-          this.tileSize,
-          bgHeight,
-          bgCategory,
-          null
-        );
-        rowData.push(groundTile);
-      }
-      this.groundTiles.push(rowData);
-    }
-
     // Create 2D array of main Tile objects
     for (let row = 0; row < this.height; row++) {
-      const rowData = [];
+      const rowTileData = [];
+      const rowGroundData = [];
       for (let col = 0; col < this.width; col++) {
         let spriteId = spriteMap[row * this.width + col];
         const spriteFrame = frames[spriteId];
@@ -86,11 +68,34 @@ class Background {
           category,
           null // wire (can be added later if needed)
         );
-        rowData.push(tile);
+
+        // Ground tile is set if the tile is not a wall
+        const groundTile = category == "wall" ? null : new Tile(
+          bgTileId,
+          { x: col * this.tileSize, y: row * this.tileSize },
+          image,
+          bgFrame,
+          this.tileSize,
+          bgHeight,
+          bgCategory,
+          null
+        );
+
+        rowTileData.push(tile);
+        rowGroundData.push(groundTile);
       }
-      this.tiles.push(rowData);
+      this.tiles.push(rowTileData);
+      this.groundTiles.push(rowGroundData);
     }
 
+    let groundTileCount = 0;
+    for (let row = 0; row < this.groundTiles.length; row++) {
+      for (let col = 0; col < this.groundTiles[row].length; col++) {
+        if(this.groundTiles[row][col] != null) {
+          groundTileCount += 1;
+        }
+      }
+    }
     return this;
   }
 
@@ -107,7 +112,7 @@ class Background {
     // Check ground tiles for wires
     if (row >= 0 && row < this.groundTiles.length && col >= 0 && col < this.groundTiles[row].length) {
       const groundTile = this.groundTiles[row][col];
-      if (groundTile.isClicked(mapX, mapY)) {
+      if (groundTile && groundTile.isClicked(mapX, mapY)) {
         if (groundTile.toggle()) return groundTile.wire;
       }
     }
