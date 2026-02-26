@@ -24,6 +24,7 @@ class Stage {
 
     // snap threshold for snapping horizontals/veritically
     this.snapThreshold = 12;
+    this.snapToGrid = true;
   }
 
   async load(dataPath) {
@@ -257,7 +258,7 @@ class Stage {
 
   // Update the current drag to follow mapX,mapY (map coords are world pixels).
   // snapToGrid boolean controls grid snapping; lenient snapping uses this.snapThreshold.
-  updateDrag(mapX, mapY, snapToGrid = true) {
+  updateDrag(mapX, mapY) {
     if (!this.draggingBlock) return;
     const tileSize = this.draggingBlock.tileSize;
 
@@ -286,7 +287,7 @@ class Stage {
       let rawTargetMainY = mapY - this.dragOffsetY;
 
       let targetMainX, targetMainY;
-      if (snapToGrid) {
+      if (this.snapToGrid) {
         ({ x: targetMainX, y: targetMainY } = applyLenientSnap(rawTargetMainX, rawTargetMainY));
       } else {
         targetMainX = Math.round(rawTargetMainX);
@@ -313,7 +314,7 @@ class Stage {
     let rawTargetY = mapY - this.dragOffsetY;
 
     let targetX, targetY;
-    if (snapToGrid) {
+    if (this.snapToGrid) {
       ({ x: targetX, y: targetY } = applyLenientSnap(rawTargetX, rawTargetY));
     } else {
       targetX = Math.round(rawTargetX);
@@ -323,9 +324,33 @@ class Stage {
     this.draggingBlock.setWorldPosition(targetX, targetY);
   }
 
-  // End any active drag
+  // End any active drag (snape to nearest square if enabled)
   endDrag() {
     const b = this.draggingBlock;
+
+    if (b && this.snapToGrid) {
+      const tileW = b.tileSize.w;
+      const tileH = b.tileSize.h;
+
+      const snapBlock = (blk) => {
+        const x = Math.round(blk.x / tileW) * tileW;
+        const y = Math.round(blk.y / tileH) * tileH;
+        blk.setWorldPosition(x, y);
+      };
+
+      if (this.draggingGroup) {
+        const gid = this.groups.getGroupFor(b.spriteId);
+        if (gid) {
+          for (const bid of this.groups.getBlocksInGroup(gid)) {
+            const blk = this.blockById[bid];
+            if (blk) snapBlock(blk);
+          }
+        }
+      } else {
+        snapBlock(b);
+      }
+    }
+
     this.draggingBlock = null;
     this.draggingGroup = false;
     this.dragOffsetX = 0;

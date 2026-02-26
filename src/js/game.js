@@ -30,9 +30,6 @@ let mouseButton = null; // Track which button is pressed
 // Stage instance (contains background and wires)
 let stage = null;
 
-// snap-to-grid flag (toggled by checkbox)
-let snapToGrid = true;
-
 // Track keyboard state
 const keys = {
   w: false,
@@ -80,7 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (snapCheckbox) {
     snapToGrid = !!snapCheckbox.checked;
     snapCheckbox.addEventListener('change', (e) => {
-      snapToGrid = !!e.target.checked;
+      if(stage) {
+        stage.snapToGrid = !!e.target.checked;
+      }
     });
   }
 });
@@ -108,7 +107,7 @@ canvas.addEventListener('mousemove', (e) => {
 
   // Dragging with left mouse button — delegate to Stage
   if (isMouseDown && mouseButton === 0 && stage && stage.draggingBlock) {
-    stage.updateDrag(pos.x, pos.y, snapToGrid);
+    stage.updateDrag(pos.x, pos.y);
     render();
   }
 });
@@ -162,7 +161,16 @@ function handleMouseDown(e) {
   const pos = getMapCoordsFromEvent(e);
 
   if (button === 0) {
-    // Left click: start dragging a block if clicked (delegate to Stage)
+    // Left click – either add to the temporary group (if G is held) or start a drag.
+    if (keys.g) {
+      if (stage) {
+        const added = stage.addBlockToTempAt(pos.x, pos.y);
+        if (added) render();
+      }
+      return;
+    }
+
+    // normal left‑click behaviour: try to begin dragging a block
     if (stage) {
       const started = stage.startDrag(pos.x, pos.y);
       if (started) return;
@@ -171,25 +179,15 @@ function handleMouseDown(e) {
   }
 
   if (button === 2) {
-    // Right click:
-    if (keys.g) {
-      // Grouping: add clicked block to temp selection instead of toggling wires
-      if (stage) {
-        const added = stage.addBlockToTempAt(pos.x, pos.y);
-        if (added) render();
+    // Right click – toggle wire only
+    if (stage) {
+      const toggled = stage.isClicked(pos.x, pos.y);
+      if (toggled) {
+        render();
+        return;
       }
-      return;
-    } else {
-      // Regular right-click behavior (toggle wire)
-      if (stage) {
-        const toggled = stage.isClicked(pos.x, pos.y);
-        if (toggled) {
-          render();
-          return;
-        }
-      }
-      return;
     }
+    return;
   }
 
   switch(button) {
@@ -253,7 +251,7 @@ function gameLoop(timestamp = performance.now()) {
   // If user is dragging a block and holding WASD (camera moved), keep the dragged block under the cursor
   if (stage && stage.draggingBlock && hasMousePos) {
     const pos = getMapCoordsFromClient(lastMouseX, lastMouseY);
-    stage.updateDrag(pos.x, pos.y, snapToGrid);
+    stage.updateDrag(pos.x, pos.y);
   }
   
   const startRender = performance.now();
