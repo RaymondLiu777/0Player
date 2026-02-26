@@ -122,7 +122,7 @@ class Gate extends Sprite {
         const originY = minRow * tileSize;
 
         const fullSize = { w: frame.w,
-                           h: frame.h * positions.length };
+                           h: tileSize * positions.length};
         const arm = new GateArm(
           instanceId,
           gateImage,
@@ -167,7 +167,7 @@ class Gate extends Sprite {
         const originX = minCol * tileSize;
         const originY = positions[0].row * tileSize + offsetY; 
 
-        const fullSize = { w: frame.w * positions.length,
+        const fullSize = { w: tileSize * positions.length,
                            h: frame.h };
         const arm = new GateArm(
           instanceId,
@@ -222,6 +222,7 @@ class GateArm extends Sprite {
   toggle() {
     this.toggledUp = !this.toggledUp;
     this.spriteFrame = this.toggledUp ? this.upFrame : this.downFrame;
+    console.log(this);
   }
 
   draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel = 1) {
