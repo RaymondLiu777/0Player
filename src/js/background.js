@@ -58,8 +58,6 @@ class Background {
         const category = sprite3D ? sprite3D.category : null;
         const height = sprite3D ? sprite3D.height : 0;
 
-        console.log(spriteId);
-
         const tile = spriteId == 0 ? null : new Tile(
           spriteId,
           { x: col * this.tileSize, y: row * this.tileSize},

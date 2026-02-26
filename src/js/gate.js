@@ -222,7 +222,6 @@ class GateArm extends Sprite {
   toggle() {
     this.toggledUp = !this.toggledUp;
     this.spriteFrame = this.toggledUp ? this.upFrame : this.downFrame;
-    console.log(this);
   }
 
   draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel = 1) {

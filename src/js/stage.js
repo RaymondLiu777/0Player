@@ -78,9 +78,10 @@ class Stage {
 
     // --- Wires ---
     const wireImg = await loadImage(`assets/${data.wires.spriteSheet}`);
+    const wire3dImage = await loadImage(`assets/${data.wires['3dSpriteSheet']}`);
     data.background.mapHeight = data.size.height;
     data.wires.mapWidth = data.size.width;
-    const wires = Wire.fromData(data.wires, wireImg, this.tileSize);
+    const wires = Wire.fromData(data.wires, wireImg, wire3dImage, this.tileSize);
 
     // Attach wires to squares when co-located; remaining wires go to background tiles
     for (const w of wires) {

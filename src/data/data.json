@@ -77,6 +77,76 @@
       "rows": 10, "columns": 8, "count": 74
     },
     "spriteOffset": 162,
+    "3dSpriteSheet": "wires-3d.png",
+    "3dSpriteSheetSize": {
+      "rows": 2, "columns": 4, "count": 8
+    },
+    "3dframes": [
+      {
+        "height": 8,
+        "direction": "right",
+        "status": "off",
+        "frame": {
+          "x": 0, "y": 0, "h": 72, "w": 72
+        }
+      },
+      {
+        "height": 8,
+        "direction": "right",
+        "status": "on",
+        "frame": {
+          "x": 80, "y": 0, "h": 72, "w": 72
+        }
+      },
+      {
+        "height": 8,
+        "direction": "down",
+        "status": "off",
+        "frame": {
+          "x": 160, "y": 0, "h": 72, "w": 72
+        }
+      },
+      {
+        "height": 8,
+        "direction": "down",
+        "status": "on",
+        "frame": {
+          "x": 240, "y": 0, "h": 72, "w": 72
+        }
+      },
+      {
+        "height": 16,
+        "direction": "right",
+        "status": "off",
+        "frame": {
+          "x": 0, "y": 80, "h": 80, "w": 80
+        }
+      },
+      {
+        "height": 16,
+        "direction": "right",
+        "status": "on",
+        "frame": {
+          "x": 80, "y": 80, "h": 80, "w": 80
+        }
+      },
+      {
+        "height": 16,
+        "direction": "down",
+        "status": "off",
+        "frame": {
+          "x": 160, "y": 80, "h": 80, "w": 80
+        }
+      },
+      {
+        "height": 16,
+        "direction": "down",
+        "status": "on",
+        "frame": {
+          "x": 240, "y": 80, "h": 80, "w": 80
+        }
+      }
+    ],
     "spriteIds": {
       "horizontal": [1, 2],
       "vertical": [3, 4],
