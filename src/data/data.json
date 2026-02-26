@@ -11,11 +11,11 @@
         "height": 16
       },
       "barrier": {
-        "sprites": [ 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55 ],
+        "sprites": [ 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57 ],
         "height": 8
       },
       "ground": {
-        "sprites": [ 0, 56, 57 ],
+        "sprites": [ 0, 58, 59 ],
         "height": 0
       }
     },
@@ -67,14 +67,14 @@
         }
       }
     },
-    "spriteOffset": 218,
+    "spriteOffset": 242,
     "height": 16,
     "spriteMap": "data/gate-map.json"
   },
   "wires" : {
     "spriteSheet": "wires.png",
     "spriteSheetSize": {
-      "rows": 7, "columns": 8, "count": 52
+      "rows": 10, "columns": 8, "count": 74
     },
     "spriteOffset": 162,
     "spriteIds": {
@@ -102,7 +102,18 @@
       "ending-right": [45, 46],
       "ending-up": [47, 48],
       "ending-left": [49, 50],
-      "ending-down": [51, 51]
+      "ending-down": [51, 52],
+      "circle-right-down": [53, 54],
+      "circle-right-up": [55, 56],
+      "circle-left-up": [57, 58],
+      "circle-left-down": [59, 60],
+      "circle-horizontal": [60, 61],
+      "circle-vertical": [62, 63],
+      "circle-none": [64, 65],
+      "wall-left": [66, 67],
+      "wall-up": [68, 69],
+      "wall-right": [70, 71],
+      "wall-down:": [72, 73]
     },
     "spriteMap": "data/wire-map.json"
   }
