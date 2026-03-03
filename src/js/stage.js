@@ -23,7 +23,7 @@ class Stage {
     this.gateArms = [];
 
     // snap threshold for snapping horizontals/veritically
-    this.snapThreshold = 12;
+    this.snapThreshold = 0;
     this.snapToGrid = true;
   }
 
@@ -279,7 +279,7 @@ class Stage {
       // Snap to nearest x or y if within threshold
       let desX = Math.round(rawX);
       let desY = Math.round(rawY);
-      if (dx <= this.snapThreshold ) {
+      if (dx <= this.snapThreshold) {
         desX = nearestX;
       }
       if (dy <= this.snapThreshold) {
