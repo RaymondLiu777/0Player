@@ -13,7 +13,7 @@ class Background {
     this.tiles = [];
     this.groundTiles = [];
     const spriteMap = data.spriteMap;
-    const bgTileId = data.bgTile;
+    const bgMap = data.backgroundMap;
 
     // Build 3D category mapping
     const sprite3DMap = {};
@@ -41,12 +41,6 @@ class Background {
       frames[id] = { x: col * this.tileSize, y: row * this.tileSize, w: this.tileSize, h: this.tileSize };
     }
 
-    // Get ground tile sprite frame
-    const bgFrame = frames[bgTileId];
-    const bgSprite3D = sprite3DMap[bgTileId];
-    const bgCategory = bgSprite3D ? bgSprite3D.category : null;
-    const bgHeight = bgSprite3D ? bgSprite3D.height : 0;
-
     // Create 2D array of main Tile objects
     for (let row = 0; row < this.height; row++) {
       const rowTileData = [];
@@ -70,17 +64,25 @@ class Background {
         );
 
         // Ground tile is set if the tile is not a wall
-        const groundTile = category == "wall" ? null : new Tile(
-          bgTileId,
-          { x: col * this.tileSize, y: row * this.tileSize },
-          image,
-          bgFrame,
-          this.tileSize,
-          bgHeight,
-          bgCategory,
-          null
-        );
-
+        let groundTile = null;
+        
+        if( category != "wall") {
+          let groundSpriteId = bgMap[row * this.width + col];
+          const bgFrame = frames[groundSpriteId];
+          const bgSprite3D = sprite3DMap[groundSpriteId];
+          const bgCategory = bgSprite3D ? bgSprite3D.category : null;
+          const bgHeight = bgSprite3D ? bgSprite3D.height : 0;
+          groundTile = new Tile(
+            groundSpriteId,
+            { x: col * this.tileSize, y: row * this.tileSize },
+            image,
+            bgFrame,
+            this.tileSize,
+            bgHeight,
+            bgCategory,
+            null
+          );
+        }
         rowTileData.push(tile);
         rowGroundData.push(groundTile);
       }

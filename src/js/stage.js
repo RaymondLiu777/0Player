@@ -33,9 +33,15 @@ class Stage {
 
     // helper: if section.spriteMap is a string, fetch & JSON‑parse it
     const resolveSpriteMap = async (section) => {
-      if (!section || typeof section.spriteMap !== 'string') return;
-      const resp = await fetch(section.spriteMap);
-      section.spriteMap = await resp.json();
+      if (!section) return;
+      if( typeof section.spriteMap === 'string') {
+        const resp = await fetch(section.spriteMap);
+        section.spriteMap = await resp.json();
+      }
+      if (typeof section.backgroundMap === 'string') {
+        const resp = await fetch(section.backgroundMap);
+        section.backgroundMap = await resp.json();
+      }
     };
 
     // make sure each subsystem has its map array before we hand it off
