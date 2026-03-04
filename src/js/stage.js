@@ -34,7 +34,7 @@ class Stage {
     // helper: if section.spriteMap is a string, fetch & JSON‑parse it
     const resolveSpriteMap = async (section) => {
       if (!section) return;
-      if( typeof section.spriteMap === 'string') {
+      if (typeof section.spriteMap === 'string') {
         const resp = await fetch(section.spriteMap);
         section.spriteMap = await resp.json();
       }
@@ -44,11 +44,13 @@ class Stage {
       }
     };
 
-    // make sure each subsystem has its map array before we hand it off
-    await resolveSpriteMap(data.background);
-    await resolveSpriteMap(data.blocks);
-    await resolveSpriteMap(data.gates);
-    await resolveSpriteMap(data.wires);
+    // resolve all of them in parallel rather than one-by-one
+    await Promise.all([
+      resolveSpriteMap(data.background),
+      resolveSpriteMap(data.blocks),
+      resolveSpriteMap(data.gates),
+      resolveSpriteMap(data.wires)
+    ]);
 
     const loadImage = (src) => new Promise((res, rej) => {
       const img = new Image();
@@ -57,9 +59,26 @@ class Stage {
       img.src = src;
     });
 
+    // kick off every image load immediately
+    const [
+      bgImg,
+      instructionImg,
+      blocksImg,
+      darkBlocksImg,
+      gatesImg,
+      wireImg,
+      wire3dImage
+    ] = await Promise.all([
+      loadImage(`assets/${data.background.spriteSheet}`),
+      loadImage(`assets/${data.background.instructions.sprite}`),
+      loadImage(`assets/${data.blocks.spriteSheet}`),
+      loadImage(`assets/${data.blocks.darkblock.spriteSheet}`),
+      loadImage(`assets/${data.gates.spriteSheet}`),
+      loadImage(`assets/${data.wires.spriteSheet}`),
+      loadImage(`assets/${data.wires['3dSpriteSheet']}`)
+    ]);
+
     // --- Background ---
-    const bgImg = await loadImage(`assets/${data.background.spriteSheet}`);
-    const instructionImg = await loadImage(`assets/${data.background.instructions.sprite}`);
     const bg = new Background(this.tileSize);
     data.background.mapHeight = data.size.height;
     data.background.mapWidth = data.size.width;
@@ -67,8 +86,6 @@ class Stage {
     this.background = bg;
 
     // --- Blocks / Squares ---
-    const blocksImg = await loadImage(`assets/${data.blocks.spriteSheet}`);
-    const darkBlocksImg = await loadImage(`assets/${data.blocks.darkblock.spriteSheet}`);
     data.background.mapHeight = data.size.height;
     data.blocks.mapWidth = data.size.width;
     const squares = Block.fromData(data.blocks, blocksImg, darkBlocksImg, this.tileSize);
@@ -77,7 +94,6 @@ class Stage {
     for (const b of this.squares) this.blockById[b.spriteId] = b;
 
     // --- Gates ---
-    const gatesImg = await loadImage(`assets/${data.gates.spriteSheet}`);
     data.gates.mapWidth = data.size.width;
     data.gates.mapHeight = data.size.height;
     const { gates, arms } = Gate.fromData(data.gates, gatesImg, this.tileSize);
@@ -85,8 +101,6 @@ class Stage {
     this.gateArms = arms;
 
     // --- Wires ---
-    const wireImg = await loadImage(`assets/${data.wires.spriteSheet}`);
-    const wire3dImage = await loadImage(`assets/${data.wires['3dSpriteSheet']}`);
     data.background.mapHeight = data.size.height;
     data.wires.mapWidth = data.size.width;
     const wires = Wire.fromData(data.wires, wireImg, wire3dImage, this.tileSize);
@@ -107,7 +121,7 @@ class Stage {
         sq.wire = w;
         w.height = sq.height;
         continue;
-      } 
+      }
       // Attach to background tile (check main tiles first, then ground tiles)
       const col = Math.floor(w.x / this.tileSize);
       const row = Math.floor(w.y / this.tileSize);
