@@ -1,6 +1,8 @@
 body {
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
     font-family: 'Arial', sans-serif;
     background-color: #f0f0f0;
 }
@@ -11,16 +13,20 @@ h1 {
 }
 
 #game-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }
 
 #game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
     border: 2px solid #000;
     background-color: #fff;
-    display: block;
-    border-radius: 50px;
+    box-sizing: border-box;
 }
 
 #controls-container {
@@ -32,8 +38,123 @@ h1 {
 #controls {
     padding-left: 10px;
     padding-right: 10px;
-    border: 2px solid #000;
-    background-color: #fff;
     display: block;
-    border-radius: 50px;
+}
+
+/* menu button in upper‑left */
+#menu-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 5px 10px;
+    border: 1px solid #000;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#settings-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 5px 10px;
+    border: 1px solid #000;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#menu-button.hidden,
+#settings-button.hidden {
+    display: none;
+}
+
+/* overlay that slides up/down from bottom */
+#menu-overlay,
+#settings-overlay {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+
+    /* start invisible + transparent */
+    opacity: 0;
+    pointer-events: none;          /* avoid catching clicks when hidden */
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 999;
+
+    transition: opacity 0.3s ease; /* fade */
+}
+
+#menu-overlay.visible,
+#settings-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.overlay-content {
+    background: #fff;
+    width: 80%;
+    max-width: 600px;
+    padding: 30px;
+    border-radius: 8px 8px 0 0;
+    position: relative;
+
+    transform: translateY(100%);          /* start off‑screen */
+    transition: transform 0.3s ease;
+}
+
+#menu-overlay.visible .overlay-content,
+#settings-overlay.visible .overlay-content {
+    transform: translateY(0);            /* slide up when overlay shown */
+}
+
+#menu-close, #settings-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+#info-columns {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 10px;
+}
+#info-columns > div {
+    flex: 1;
+}
+
+#info-columns h3 {
+    margin: 0;
+    text-align: center;
+}
+
+#info-columns ul {
+    margin-top: 5px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+h1 {
+    margin-top: 0;
+}
+
+#controls-list {
+    list-style-type: none;
+    padding-left: 0px;
+}
+
+#settings-overlay h2 {
+    margin-top: 0;
 }

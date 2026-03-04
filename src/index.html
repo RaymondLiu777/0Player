@@ -8,25 +8,71 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <h1>An Unoffical Semi-interactive Recreation of 0PLAYER</h1>
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
     </div>
-    <div id="controls-container">
-        <div>
-            <label>
-                <input id="snap-checkbox" type="checkbox" checked />
-                Snap to grid
-            </label>
-            <!-- <div id="controls">
-                <h3>Controls:</h3>
-                <p>WASD to move the camera</p>
-                <p>Q/E to Zoom Out/In</p>
-                <p>Right click and drag to move blocks</p>
-                <p>Left click to toggle costumes</p>
-            </div> -->
+
+    <div id="menu-button" class="hidden">About</div>
+    <div id="settings-button" class="hidden">Settings</div>
+
+    <!-- about/menu overlay -->
+    <div id="menu-overlay" class="visible">
+        <div class="overlay-content">
+            <button id="menu-close">&times;</button>
+            <h1>An Unoffical Semi-interactive Recreation of <a href="https://plus.cerisetalis.com/0PLAYER/">0PLAYER</a></h1>
+
+            <p>&emsp;The original game was just a static image and meant to be played in a image editor. This is just a browser-based recreation that mimics many of the features you'd want in an image editor.</p>
+
+            <div id="info-columns">
+                <div>
+                    <h3>Implemented:</h3>
+                    <ul>
+                        <li>Draggable tiles</li>
+                        <li>Toggleable wires</li>
+                        <li>Block grouping</li>
+                        <li>Snap to grid for blocks (can be disabled in settings)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3><em>NOT</em> Implemented:</h3>
+                    <ul>
+                        <li>Any implementation of mechanics</li>
+                        <li>The original art (some details may be missing)</li>
+                        <li>Some late game discoveries that would be too easy to
+                            stumble across if implemented</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="controls-container">
+                <div id="controls">
+                    <p><strong>Controls for the website (not the game)</strong></p>
+                    <ul id="controls-list">
+                        <li>WASD/Drag Scroll Wheel: Move camera</li>
+                        <li>QE/Scroll Wheel: Zoom in and zoom out</li>
+                        <li>Left Click + Drag: Move tiles</li>
+                        <li>Right Click: Toggle sprite</li>
+                        <li>Hold G + Left Click: Group/Ungroup tiles</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- settings overlay -->
+    <div id="settings-overlay" class="hidden">
+        <div class="overlay-content">
+            <button id="settings-close">&times;</button>
+            <h2 class="text-center">Settings</h2>
+            <div id="settings-box" class="text-center">
+                <label>
+                    <input id="snap-checkbox" type="checkbox" checked />
+                    Snap to grid
+                </label>
+            </div>
+        </div>
+    </div>
+
     <script src="js/sprite.js"></script>
     <script src="js/block.js"></script>
     <script src="js/blockgroups.js"></script>
@@ -36,5 +82,57 @@
     <script src="js/stage.js"></script>
     <script src="js/wire.js"></script>
     <script src="js/game.js"></script>
+
+    <!-- overlay show/hide logic -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const menuBtn = document.getElementById('menu-button');
+        const settingsBtn = document.getElementById('settings-button');
+        const menuOv = document.getElementById('menu-overlay');
+        const settingsOv = document.getElementById('settings-overlay');
+        const menuClose = document.getElementById('menu-close');
+        const settingsClose = document.getElementById('settings-close');
+
+        function hideButtons() {
+          menuBtn.classList.add('hidden');
+          settingsBtn.classList.add('hidden');
+        }
+        function showButtons() {
+          menuBtn.classList.remove('hidden');
+          settingsBtn.classList.remove('hidden');
+        }
+
+        function showMenu() {
+          menuOv.classList.add('visible');
+          hideButtons();
+        }
+        function hideMenu() {
+          menuOv.classList.remove('visible');
+          showButtons();
+        }
+
+        function showSettings() {
+          settingsOv.classList.add('visible');
+          hideButtons();
+        }
+        function hideSettings() {
+          settingsOv.classList.remove('visible');
+          showButtons();
+        }
+
+        menuBtn.addEventListener('click', showMenu);
+        settingsBtn.addEventListener('click', showSettings);
+
+        menuClose.addEventListener('click', hideMenu);
+        settingsClose.addEventListener('click', hideSettings);
+
+        menuOv.addEventListener('click', (e) => {
+          if (e.target === menuOv) hideMenu();
+        });
+        settingsOv.addEventListener('click', (e) => {
+          if (e.target === settingsOv) hideSettings();
+        });
+      });
+    </script>
 </body>
 </html>
