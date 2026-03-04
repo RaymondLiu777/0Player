@@ -20,5 +20,5 @@ This recreation of the does NOT have:
 - WASD/Drag Scroll Wheel: Move camera
 - QE/Scroll Wheel: Zoom in and zoom out
 - Left Click + Drag: Move tiles
-- Right click: Toggle sprite
+- Right Click: Toggle sprite
 - Hold G + Left Click: Group/Ungroup tiles (Grouped tiles move together, selecting a tile ungroups it from previous group)

@@ -32,10 +32,15 @@
       "rows": 14, "columns": 8, "count": 112
     },
     "spriteOffset": 64,
-    "spriteIds": {
-      "green": 1
-    },
     "height": 8,
+    "darkblock": {
+      "spriteSheet": "darkblock.png",
+      "spriteSheetSize": {
+        "rows": 3, "columns": 4, "count": 12
+      },
+      "spriteSize": 72,
+      "spriteOffset": 264
+    },
     "spriteMap": "data/block-map.json"
   },
   "gates": {

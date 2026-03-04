@@ -67,9 +67,10 @@ class Stage {
 
     // --- Blocks / Squares ---
     const blocksImg = await loadImage(`assets/${data.blocks.spriteSheet}`);
+    const darkBlocksImg = await loadImage(`assets/${data.blocks.darkblock.spriteSheet}`);
     data.background.mapHeight = data.size.height;
     data.blocks.mapWidth = data.size.width;
-    const squares = Block.fromData(data.blocks, blocksImg, this.tileSize);
+    const squares = Block.fromData(data.blocks, blocksImg, darkBlocksImg, this.tileSize);
     this.squares = squares;
     this.blockById = {};
     for (const b of this.squares) this.blockById[b.spriteId] = b;
@@ -267,12 +268,11 @@ class Stage {
   // snapToGrid boolean controls grid snapping; lenient snapping uses this.snapThreshold.
   updateDrag(mapX, mapY) {
     if (!this.draggingBlock) return;
-    const tileSize = this.draggingBlock.tileSize;
 
     const applyLenientSnap = (rawX, rawY) => {
       // nearest tile-aligned positions
-      const nearestX = Math.round(rawX / tileSize.w) * tileSize.w;
-      const nearestY = Math.round(rawY / tileSize.h) * tileSize.h;
+      const nearestX = Math.round(rawX / this.tileSize) * this.tileSize;
+      const nearestY = Math.round(rawY / this.tileSize) * this.tileSize;
       const dx = Math.abs(rawX - nearestX);
       const dy = Math.abs(rawY - nearestY);
 
@@ -336,12 +336,9 @@ class Stage {
     const b = this.draggingBlock;
 
     if (b && this.snapToGrid) {
-      const tileW = b.tileSize.w;
-      const tileH = b.tileSize.h;
-
       const snapBlock = (blk) => {
-        const x = Math.round(blk.x / tileW) * tileW;
-        const y = Math.round(blk.y / tileH) * tileH;
+        const x = Math.round(blk.x / this.tileSize) * this.tileSize;
+        const y = Math.round(blk.y / this.tileSize) * this.tileSize;
         blk.setWorldPosition(x, y);
       };
 
@@ -446,6 +443,11 @@ class Stage {
           x2: obj.x + obj.tileSize.w,
           y2: obj.y + obj.tileSize.h
         };
+
+        if( item.type === 'block') {
+          blockBounds.x2 = obj.x + this.tileSize;
+          blockBounds.y2 = obj.y + this.tileSize;
+        }
 
         // Draw any colliding tiles that haven't been drawn yet
         if (this.background) {
