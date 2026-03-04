@@ -23,6 +23,19 @@
         "height": 0
       }
     },
+    "instructions": {
+      "sprite": "instructions.png",
+      "location": {
+        "x": 8,
+        "y": 115
+      },
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "h": 258,
+        "w": 640
+      }
+    },
     "spriteMap": "data/stage-map.json",
     "backgroundMap": "data/bg-map.json"
   },

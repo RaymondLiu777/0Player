@@ -3,17 +3,37 @@ class Background {
     this.tileSize = tileSize;
     this.tiles = []; // 2D array of Tile objects (main layer)
     this.groundTiles = []; // 2D array of ground Tile objects (base layer)
+    this.instructions = null;
     this.width = 0;
     this.height = 0;
   }
 
-  load(data, image) {
+  load(data, image, instructionImg) {
     this.height = data.mapHeight;
     this.width = data.mapWidth;
     this.tiles = [];
     this.groundTiles = [];
     const spriteMap = data.spriteMap;
     const bgMap = data.backgroundMap;
+
+    // Set up instructions image
+    const instructionX = data.instructions.location.x;
+    const instructionY = data.instructions.location.y;
+    const instuctionFrame = data.instructions.frame;
+    this.instructions = new Sprite(
+      1, 
+      instructionImg, 
+      instuctionFrame,
+      {
+        "x": instructionX * this.tileSize,
+        "y": instructionY * this.tileSize,
+      }, 
+      {
+        "w": instuctionFrame.w,
+        "h": instuctionFrame.h
+      },
+      0
+    );
 
     // Build 3D category mapping
     const sprite3DMap = {};

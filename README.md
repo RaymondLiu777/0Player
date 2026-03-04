@@ -12,9 +12,11 @@ This recreation of the game has:
 - Tile grouping (Connected tiles are not automatically grouped)
 
 This recreation of the does NOT have:
-- Any implementation of mechanics
+- Any implementation of game mechanics
 - Some late game discoveries that would be too easy to stumble across if implemented
-- The original art (some details my be missing)
+- The original art* (some details my be missing)
+
+*With an exception of the instructions panel at the beginning of the game
 
 ## Controls for the image editor (not for the game)
 - WASD/Drag Scroll Wheel: Move camera

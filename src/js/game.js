@@ -15,8 +15,8 @@ window.addEventListener('resize', resizeCanvas);
 // Camera position
 let cameraX = 0;
 let cameraY = 0;
-let zoomLevel = .5; // 1 = 100%, 2 = 200%, etc.
-const minZoom = 0.3;
+let zoomLevel = .8; // 1 = 100%, 2 = 200%, etc.
+const minZoom = 0.5;
 const maxZoom = 1;
 const zoomSpeed = 0.1;
 

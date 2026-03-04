@@ -59,10 +59,11 @@ class Stage {
 
     // --- Background ---
     const bgImg = await loadImage(`assets/${data.background.spriteSheet}`);
+    const instructionImg = await loadImage(`assets/${data.background.instructions.sprite}`);
     const bg = new Background(this.tileSize);
     data.background.mapHeight = data.size.height;
     data.background.mapWidth = data.size.width;
-    bg.load(data.background, bgImg);
+    bg.load(data.background, bgImg, instructionImg);
     this.background = bg;
 
     // --- Blocks / Squares ---
@@ -425,6 +426,7 @@ class Stage {
     for (const item of groundLayer) {
       item.obj.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
     }
+    this.background.instructions.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
 
     // Draw all objects in sorted order, handling tile-block collisions
     const drawnTiles = new Set();
