@@ -71,6 +71,31 @@ function getMapCoordsFromClient(clientX, clientY) {
 // Prevent default context menu so right-click can be used
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
+// wheel → zoom
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const oldZoom = zoomLevel;
+  // scroll up = negative deltaY → zoom in
+  if (e.deltaY < 0) {
+    zoomLevel = Math.min(maxZoom, zoomLevel + zoomSpeed);
+  } else {
+    zoomLevel = Math.max(minZoom, zoomLevel - zoomSpeed);
+  }
+
+  if (oldZoom !== zoomLevel) {
+    // keep the map point under the cursor fixed
+    const rect = canvas.getBoundingClientRect();
+    const canvasX = e.clientX - rect.left;
+    const canvasY = e.clientY - rect.top;
+    const mapX = cameraX + canvasX / oldZoom;
+    const mapY = cameraY + canvasY / oldZoom;
+    cameraX = mapX - canvasX / zoomLevel;
+    cameraY = mapY - canvasY / zoomLevel;
+    clampCamera();
+    render();
+  }
+});
+
 // Hook checkbox to update snapToGrid
 document.addEventListener('DOMContentLoaded', () => {
   const snapCheckbox = document.getElementById('snap-checkbox');
@@ -91,11 +116,14 @@ canvas.addEventListener('mousedown', (e) => {
   lastMouseY = e.clientY;
   hasMousePos = true;
   mouseButton = e.button; // 0 = left, 1 = middle, 2 = right
-  
+
   handleMouseDown(e);
 });
 
 canvas.addEventListener('mousemove', (e) => {
+  // compute delta before updating last positions
+  const dx = e.clientX - lastMouseX;
+  const dy = e.clientY - lastMouseY;
   lastMouseX = e.clientX;
   lastMouseY = e.clientY;
   hasMousePos = true;
@@ -105,10 +133,19 @@ canvas.addEventListener('mousemove', (e) => {
   // Hover highlighting (always)
   if (stage) stage.hoverAt(pos.x, pos.y);
 
-  // Dragging with left mouse button — delegate to Stage
-  if (isMouseDown && mouseButton === 0 && stage && stage.draggingBlock) {
-    stage.updateDrag(pos.x, pos.y);
-    render();
+  if (isMouseDown) {
+    if (mouseButton === 0 && stage && stage.draggingBlock) {
+      // normal block drag
+      stage.updateDrag(pos.x, pos.y);
+      render();
+    } else if (mouseButton === 1) {
+      // middle‑button pan: move camera opposite to mouse movement,
+      // taking zoom level into account
+      cameraX -= dx / zoomLevel;
+      cameraY -= dy / zoomLevel;
+      clampCamera();
+      render();
+    }
   }
 });
 
@@ -192,7 +229,7 @@ function handleMouseDown(e) {
 
   switch(button) {
     case 1: // Middle click
-      // reserved
+      stage.endDrag();
       break;
   }
 }
