@@ -450,9 +450,15 @@ class Stage {
         // Draw any colliding tiles that haven't been drawn yet
         if (this.background) {
           const startCol = Math.floor(blockBounds.x1 / this.tileSize);
-          const endCol   = Math.ceil(blockBounds.x2 / this.tileSize);
+          let endCol   = Math.ceil(blockBounds.x2 / this.tileSize);
           const startRow = Math.floor(blockBounds.y1 / this.tileSize);
-          const endRow   = Math.ceil(blockBounds.y2 / this.tileSize);
+          let endRow   = Math.ceil(blockBounds.y2 / this.tileSize);
+
+          // If a block is perfectly on a tile + that tile is a non-zero height stage tile, draw tiles to bottom and right
+          if( blockBounds.x1 % this.tileSize == 0 && blockBounds.y1 % this.tileSize == 0 && this.background.tiles?.[startRow]?.[startCol]?.height != null) {
+            endCol += 1;
+            endRow += 1;
+          }
 
           for (let row = startRow; row < endRow; row++) {
             for (let col = startCol; col < endCol; col++) {

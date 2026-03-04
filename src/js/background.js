@@ -52,7 +52,7 @@ class Background {
         const category = sprite3D ? sprite3D.category : null;
         const height = sprite3D ? sprite3D.height : 0;
 
-        const tile = spriteId == 0 ? null : new Tile(
+        const tile = spriteId == 0 || category == 'ignore' ? null : new Tile(
           spriteId,
           { x: col * this.tileSize, y: row * this.tileSize},
           image,
