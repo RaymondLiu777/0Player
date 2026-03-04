@@ -8,19 +8,19 @@ The original game was just a static image and meant to be played in a image edit
 This recreation of the game has:
 - Draggable tiles
 - Toggleable wires
-- Snap to Grid Quality of Life (can be disabled)
-- Tile grouping (Connected tiles are not automatically grouped)
+- Snap to Grid (can be disabled)
+- Tile grouping
 
 This recreation of the does NOT have:
 - Any implementation of game mechanics
 - Some late game discoveries that would be too easy to stumble across if implemented
 - The original art* (some details my be missing)
 
-*With an exception of the instructions panel at the beginning of the game
+*With an exception of the instructions panel at the bottom left
 
 ## Controls for the image editor (not for the game)
 - WASD/Drag Scroll Wheel: Move camera
 - QE/Scroll Wheel: Zoom in and zoom out
 - Left Click + Drag: Move tiles
 - Right Click: Toggle sprite
-- Hold G + Left Click: Group/Ungroup tiles (Grouped tiles move together, selecting a tile ungroups it from previous group)
+- Hold G + Left Click: Group/Ungroup tiles
