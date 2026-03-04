@@ -2,6 +2,8 @@
 
 This is a semi-interactive recreation of the static image [0PLAYER](https://plus.cerisetalis.com/0PLAYER/) game. I would highly recommend checking it out!
 
+[Click Here](https://raymondliu777.github.io/0Player/) for my recreation.
+
 ## What does semi-interactive mean?
 The original game was just a static image and meant to be played in a image editor. This is just a browser based recreation that minics many of the features you'd want in a image editor.
 
