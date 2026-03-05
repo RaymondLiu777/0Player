@@ -14,7 +14,7 @@ class Tile extends Sprite {
     this.category = category;
     this.wire = wire;
     // whether there is another wall immediately to the right/bottom
-    this.hide3D = { right: false, bottom: false };
+    this.hide3D = { right: false, bottom: false, all: false };
   }
 
   toggle() {
@@ -37,14 +37,16 @@ class Tile extends Sprite {
     const screen3D = Math.floor(this.height * zoomLevel);
 
     if (this.category === 'barrier') {
-      ctx.filter = "brightness(60%)";
-      ctx.drawImage(
-        this.spriteSheet,
-        this.spriteFrame.x, this.spriteFrame.y, this.spriteFrame.w, this.spriteFrame.h,
-        screenX, screenY,
-        screenWidth, screenHeight
-      );
-      ctx.filter = "none";
+      if (!this.hide3D.all) {
+        ctx.filter = "brightness(60%)";
+        ctx.drawImage(
+          this.spriteSheet,
+          this.spriteFrame.x, this.spriteFrame.y, this.spriteFrame.w, this.spriteFrame.h,
+          screenX, screenY,
+          screenWidth, screenHeight
+        );
+        ctx.filter = "none";
+      }
     } else if (this.category === 'wall') {
       // only draw a side if there isn't another wall adjacent
       if (!this.hide3D.right) {

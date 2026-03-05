@@ -6,6 +6,10 @@ class Background {
     this.instructions = null;
     this.width = 0;
     this.height = 0;
+
+    // off‑screen cache
+    this.cacheCanvas = null;
+    this.cacheCtx = null;
   }
 
   load(data, image, instructionImg) {
@@ -130,10 +134,73 @@ class Background {
             }
           }
         }
+        if (tile && tile.category === 'barrier') {
+          const right = (col + 1 < this.width) ? this.tiles[row][col + 1] : null;
+          const down = (row + 1 < this.height) ? this.tiles[row + 1][col] : null;
+          const downright = (col + 1 < this.width && row + 1 < this.height) ? this.tiles[row + 1][col + 1] : null;
+          if( right && down && downright && right.height >= tile.height && 
+              down.height >= tile.height && downright.height >= tile.height) {
+            tile.hide3D.all = true;
+          }
+        }
       }
     }
 
+    // build the off‑screen cache while everything is still in place
+    this.renderCache();
+
     return this;
+  }
+
+  // draw entire background (ground + main + any wires + instructions)
+  renderCache() {
+    const pxW = this.width * this.tileSize;
+    const pxH = this.height * this.tileSize;
+
+    if (!this.cacheCanvas) {
+      this.cacheCanvas = document.createElement('canvas');
+      this.cacheCtx = this.cacheCanvas.getContext('2d');
+    }
+    this.cacheCanvas.width = pxW;
+    this.cacheCanvas.height = pxH;
+
+    const ctx = this.cacheCtx;
+    ctx.clearRect(0, 0, pxW, pxH);
+
+    // ground layer first
+    for (let row = 0; row < this.height; row++) {
+      for (let col = 0; col < this.width; col++) {
+        const gt = this.groundTiles[row][col];
+        if (gt) {
+          gt.draw(ctx, 0, 0, pxW, pxH, 1);
+        }
+      }
+    }
+    // main layer
+    for (let row = 0; row < this.height; row++) {
+      for (let col = 0; col < this.width; col++) {
+        const t = this.tiles[row][col];
+        if (t) {
+          t.draw(ctx, 0, 0, pxW, pxH, 1);
+        }
+      }
+    }
+    if (this.instructions) this.instructions.draw(ctx, 0, 0, pxW, pxH, 1);
+  }
+
+  /**
+   * Re‑draw a single tile / wire when the wire state changes.
+   * harmless if the wire isn’t on a background tile.
+   */
+  updateCache(wire) {
+    const col = Math.floor(wire.x / this.tileSize);
+    const row = Math.floor(wire.y / this.tileSize);
+    if (row < 0 || row >= this.height || col < 0 || col >= this.width) return;
+
+    const main = this.tiles[row][col];
+    if( main.wire.spriteId == wire.spriteId) {
+      wire.draw(this.cacheCtx, 0, 0, this.cacheCanvas.width, this.cacheCanvas.height, 1);
+    }
   }
 
   addGates(gates) {
@@ -155,12 +222,14 @@ class Background {
 
       let tile = null;
       // Check main tiles first
-      if (row >= 0 && row < this.tiles.length && col >= 0 && col < this.tiles[row].length) {
+      if (row >= 0 && row < this.tiles.length && col >= 0 &&
+          col < this.tiles[row].length) {
         tile = this.tiles[row][col];
       }
       // Fall back to ground tiles if main tile is empty/transparent
       if (!tile || tile.spriteId === 0) {
-        if (row >= 0 && row < this.groundTiles.length && col >= 0 && col < this.groundTiles[row].length) {
+        if (row >= 0 && row < this.groundTiles.length &&
+            col >= 0 && col < this.groundTiles[row].length) {
           tile = this.groundTiles[row][col];
         }
       }
@@ -168,6 +237,23 @@ class Background {
       if (tile) {
         tile.wire = w;
         w.height = tile.height;
+
+        // disable 3D shadows in directions where an adjacent tile
+        // is at least as tall as this one
+        // look right
+        if (col + 1 < this.tiles[row].length) {
+          const neigh = this.tiles[row][col + 1];
+          if (neigh && neigh.height >= tile.height) {
+            w.directions3D.right = false;
+          }
+        }
+        // look down
+        if (row + 1 < this.tiles.length) {
+          const neigh = this.tiles[row + 1][col];
+          if (neigh && neigh.height >= tile.height) {
+            w.directions3D.down = false;
+          }
+        }
       }
     }
   }

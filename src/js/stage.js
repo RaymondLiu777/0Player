@@ -121,7 +121,10 @@ class Stage {
       bgWires.push(w);
     }
     // Attach wires to background
-    this.background.attachWires(bgWires)
+    this.background.attachWires(bgWires);
+
+    // now that gates and wires are all in place, build the cached image
+    this.background.renderCache();
 
     return this;
   }
@@ -349,117 +352,42 @@ class Stage {
   }
 
   draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel = 1) {
-    // Collect all drawable objects (tiles and blocks)
-    const groundLayer = [];
-    const drawables = [];
-    const highlightedBlocks = [];
-
-    // Collect visible background tiles (height = 0 ground tiles)
-    if (this.background) {
-      const visibleTiles = this.background.getVisibleTiles(cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
-      
-      // Separate ground tiles from main tiles
-      for (const tile of visibleTiles) {
-        if (tile.height === 0) {
-          groundLayer.push({ type: 'tile', obj: tile, x: tile.x, y: tile.y });
-        }
-      }
-      
-      // Add main tiles and separate blocks for collision checking
-      for (const tile of visibleTiles) {
-        if (tile.height > 0) {
-          drawables.push({ type: 'tile', obj: tile, x: tile.x, y: tile.y });
-        }
-      }
+    // blit part of the pre‑rendered background cache
+    if (this.background && this.background.cacheCanvas) {
+      const srcX = cameraX;
+      const srcY = cameraY;
+      const srcW = canvasWidth / zoomLevel;
+      const srcH = canvasHeight / zoomLevel;
+      ctx.drawImage(
+        this.background.cacheCanvas,
+        srcX, srcY, srcW, srcH,
+        0, 0, canvasWidth, canvasHeight
+      );
     }
 
-    // Collect visible blocks (with culling)
     const viewWidth = canvasWidth / zoomLevel;
     const viewHeight = canvasHeight / zoomLevel;
+    const highlightedBlocks = [];
+
+    // draw blocks and handle their 2.5‑D overlap
     for (const block of this.squares) {
       if (block.x + block.tileSize.w < cameraX || block.x > cameraX + viewWidth ||
           block.y + block.tileSize.h < cameraY || block.y > cameraY + viewHeight) {
         continue; // Cull off-screen blocks
       }
-      drawables.push({ type: 'block', obj: block, x: block.x, y: block.y });
-      if (block.highlighted) {
-        highlightedBlocks.push(block);
-      }
+
+      block.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
+      if (block.highlighted) highlightedBlocks.push(block);
     }
 
-    // arms can be drawn anywhere; we don’t bother to cull them here
+    // gate arms continue to be rendered on top of blocks
     for (const arm of this.gateArms) {
-      drawables.push({ type: 'arm', obj: arm, x: arm.x, y: arm.y});
+      arm.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
     }
 
-    // Sort by x + y (isometric-like ordering: top-left to bottom-right)
-    groundLayer.sort((a, b) => (a.x + a.y) - (b.x + b.y));
-    drawables.sort((a, b) => (a.x + a.y) - (b.x + b.y));
-
-    // Draw ground layer
-    for (const item of groundLayer) {
-      item.obj.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
-    }
-    this.background.instructions.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
-
-    // Draw all objects in sorted order, handling tile-block collisions
-    const drawnTiles = new Set();
-    for (const item of drawables) {
-      if (item.type === 'tile' || item.type === 'gate' ) {
-        if (drawnTiles.has(item.obj)) {
-          continue;
-        }
-        drawnTiles.add(item.obj);
-        item.obj.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
-      } else if (item.type === 'block' || item.type === 'arm') {
-        const obj = item.obj;
-        const blockBounds = {
-          x1: obj.x,
-          y1: obj.y,
-          x2: obj.x + obj.tileSize.w,
-          y2: obj.y + obj.tileSize.h
-        };
-
-        if( item.type === 'block') {
-          blockBounds.x2 = obj.x + this.tileSize;
-          blockBounds.y2 = obj.y + this.tileSize;
-        }
-
-        // Draw any colliding tiles that haven't been drawn yet
-        if (this.background) {
-          const startCol = Math.floor(blockBounds.x1 / this.tileSize);
-          let endCol   = Math.ceil(blockBounds.x2 / this.tileSize);
-          const startRow = Math.floor(blockBounds.y1 / this.tileSize);
-          let endRow   = Math.ceil(blockBounds.y2 / this.tileSize);
-
-          // If a block is perfectly on a tile + that tile is a non-zero height stage tile, draw tiles to bottom and right
-          if( blockBounds.x1 % this.tileSize == 0 && blockBounds.y1 % this.tileSize == 0 && this.background.tiles?.[startRow]?.[startCol]?.height != null) {
-            endCol += 1;
-            endRow += 1;
-          }
-
-          for (let row = startRow; row < endRow; row++) {
-            for (let col = startCol; col < endCol; col++) {
-              if (row >= 0 && row < this.background.tiles.length &&
-                  col >= 0 && col < this.background.tiles[row].length) {
-                const tile = this.background.tiles[row][col];
-                if (tile && !drawnTiles.has(tile)) {
-                  drawnTiles.add(tile);
-                  tile.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
-                }
-              }
-            }
-          }
-        }
-        obj.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
-      } else if (item.type === 'arm') {
-        item.obj.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
-      }
-    }
-
-    // Draw highlight overlays for highlighted blocks
-    for (const block of highlightedBlocks) {
-      this.drawBlockHighlight(ctx, block, cameraX, cameraY, zoomLevel);
+    // highlights
+    for (const b of highlightedBlocks) {
+      this.drawBlockHighlight(ctx, b, cameraX, cameraY, zoomLevel);
     }
   }
 
@@ -510,12 +438,16 @@ class Stage {
 
   handleRightDragAt(mapX, mapY) {
     const obj = this.isClicked(mapX, mapY);
-    if (!obj) {
-      return null;
-    }
+    if (!obj) return null;
+
     if (!this.rightDragToggled.has(obj)) {
       obj.toggle();
       this.rightDragToggled.add(obj);
+
+      // if the toggle affected a background wire, update the cache
+      if (obj instanceof Wire && this.background) {
+        this.background.updateCache(obj);
+      }
       return obj;
     }
     return null;

@@ -8,6 +8,7 @@ const ctx = canvas.getContext('2d');
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  canvas.style.background = "black";
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
