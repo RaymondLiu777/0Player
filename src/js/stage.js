@@ -19,7 +19,6 @@ class Stage {
     this.hoverSingleId = null;
 
     // gate state
-    this.gates = [];
     this.gateArms = [];
 
     // snap threshold for snapping horizontals/veritically
@@ -101,52 +100,28 @@ class Stage {
     data.gates.mapWidth = data.size.width;
     data.gates.mapHeight = data.size.height;
     const { gates, arms } = Gate.fromData(data.gates, gatesImg, this.tileSize);
-    this.gates = gates;
+    // insert gate tiles into the background grid
+    this.background.addGates(gates);
     this.gateArms = arms;
 
     // --- Wires ---
     data.background.mapHeight = data.size.height;
     data.wires.mapWidth = data.size.width;
     const wires = Wire.fromData(data.wires, wireImg, wire3dImage, this.tileSize);
+    const bgWires = [];
 
-    // Attach wires to squares when co-located; remaining wires go to background tiles
+    // Attach wires to squares
     for (const w of wires) {
-      // attach any wires that landed on gates
-      const g = this.gates.find(g => g.x === w.x && g.y === w.y);
-      if (g) {
-        g.wire = w;
-        w.height = g.height;
-        continue;
-      }
-      // attach wires that landed on square
       const sq = this.squares.find(s => s.x === w.x && s.y === w.y);
       if (sq) {
-        // Attach to block
         sq.wire = w;
         w.height = sq.height;
         continue;
       }
-      // Attach to background tile (check main tiles first, then ground tiles)
-      const col = Math.floor(w.x / this.tileSize);
-      const row = Math.floor(w.y / this.tileSize);
-      
-      let tile = null;
-      // Check main tiles first
-      if (row >= 0 && row < this.background.tiles.length && col >= 0 && col < this.background.tiles[row].length) {
-        tile = this.background.tiles[row][col];
-      }
-      // Fall back to ground tiles if main tile is empty/transparent
-      if (!tile || tile.spriteId === 0) {
-        if (row >= 0 && row < this.background.groundTiles.length && col >= 0 && col < this.background.groundTiles[row].length) {
-          tile = this.background.groundTiles[row][col];
-        }
-      }
-      
-      if (tile) {
-        tile.wire = w;
-        w.height = tile.height;
-      }
+      bgWires.push(w);
     }
+    // Attach wires to background
+    this.background.attachWires(bgWires)
 
     return this;
   }
@@ -160,14 +135,7 @@ class Stage {
       }
     }
 
-    // then gate blocks
-    for (const g of this.gates) {
-      if (g.isClicked(mapX, mapY) && g.wire != null) {
-        return g.wire;
-      }
-    }
-
-    // Check squares
+    // squares/blocks
     for (let i = this.squares.length - 1; i >= 0; i--) {
       const s = this.squares[i];
       if (s.isClicked(mapX, mapY) && s.wire != null) {
@@ -417,15 +385,6 @@ class Stage {
       if (block.highlighted) {
         highlightedBlocks.push(block);
       }
-    }
-
-    // gates behave like blocks for z‑ordering
-    for (const gate of this.gates) {
-      if (gate.x + gate.tileSize.w < cameraX || gate.x > cameraX + viewWidth ||
-          gate.y + gate.tileSize.h < cameraY || gate.y > cameraY + viewHeight) {
-        continue;
-      }
-      drawables.push({ type: 'gate', obj: gate, x: gate.x, y: gate.y });
     }
 
     // arms can be drawn anywhere; we don’t bother to cull them here

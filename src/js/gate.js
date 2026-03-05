@@ -1,4 +1,4 @@
-class Gate extends Sprite {
+class Gate extends Tile {
   /**
    * @param {number} spriteId
    * @param {HTMLImageElement} spriteSheet
@@ -13,8 +13,9 @@ class Gate extends Sprite {
    */
   constructor(spriteId, spriteSheet, spriteFrame, location, tileSize, height,
               wire = null, gateArm = null, direction = null, startPosition = null) {
-    super(spriteId, spriteSheet, spriteFrame, location, tileSize, height);
-    this.wire = wire;
+    super(spriteId, location, spriteSheet, spriteFrame,
+          tileSize, height, 'gate', wire);
+
     this.gateArm = gateArm;
     this.direction = direction;
     this.startPosition = startPosition;
@@ -71,7 +72,7 @@ class Gate extends Sprite {
       const spec = blockSpecs[id - 1];
 
       const gate = new Gate(
-        instanceId,
+        "g" + instanceId,
         gateImage,
         spec,
         { x: col * tileSize, y: row * tileSize },

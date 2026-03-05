@@ -136,6 +136,42 @@ class Background {
     return this;
   }
 
+  addGates(gates) {
+    for (const gate of gates) {
+      const col = Math.floor(gate.x / this.tileSize);
+      const row = Math.floor(gate.y / this.tileSize);
+      if (row >= 0 && row < this.tiles.length &&
+          col >= 0 && col < this.tiles[row].length) {
+        this.tiles[row][col] = gate;
+      }
+    }
+  }
+
+  attachWires(wires) {
+    for (const w of wires) {
+      // Attach to background tile (check main tiles first, then ground tiles)
+      const col = Math.floor(w.x / this.tileSize);
+      const row = Math.floor(w.y / this.tileSize);
+
+      let tile = null;
+      // Check main tiles first
+      if (row >= 0 && row < this.tiles.length && col >= 0 && col < this.tiles[row].length) {
+        tile = this.tiles[row][col];
+      }
+      // Fall back to ground tiles if main tile is empty/transparent
+      if (!tile || tile.spriteId === 0) {
+        if (row >= 0 && row < this.groundTiles.length && col >= 0 && col < this.groundTiles[row].length) {
+          tile = this.groundTiles[row][col];
+        }
+      }
+
+      if (tile) {
+        tile.wire = w;
+        w.height = tile.height;
+      }
+    }
+  }
+
   // Check and toggle any tiles at map coords (checks main tiles first, then ground tiles for wires)
   isClicked(mapX, mapY) {
     const col = Math.floor(mapX / this.tileSize);
