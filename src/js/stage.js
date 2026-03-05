@@ -198,7 +198,7 @@ class Stage {
     this.isGrouping = true;
     this.groups.clearTemp();
     // cancel any active drag
-    if (this.draggingBlock) this.endDrag();
+    if (this.draggingBlock) this.endBlockDrag();
     this.hoverGroupId = null;
     this.hoverSingleId = null;
     this.recomputeHighlights();
@@ -251,7 +251,7 @@ class Stage {
 
   // Begin dragging a square if one exists at map coords.
   // Returns the dragged Block or null.
-  startDrag(mapX, mapY) {
+  startBlockDrag(mapX, mapY) {
     if (this.isGrouping) return null; // dragging not supported while grouping
     const sq = this.findTopSquareAt(mapX, mapY);
     if (!sq) return null;
@@ -282,7 +282,7 @@ class Stage {
 
   // Update the current drag to follow mapX,mapY (map coords are world pixels).
   // snapToGrid boolean controls grid snapping; lenient snapping uses this.snapThreshold.
-  updateDrag(mapX, mapY) {
+  updateBlockDrag(mapX, mapY) {
     if (!this.draggingBlock) return;
 
     const applyLenientSnap = (rawX, rawY) => {
@@ -348,7 +348,7 @@ class Stage {
   }
 
   // End any active drag (snape to nearest square if enabled)
-  endDrag() {
+  endBlockDrag() {
     const b = this.draggingBlock;
 
     if (b && this.snapToGrid) {

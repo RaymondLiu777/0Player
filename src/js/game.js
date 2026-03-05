@@ -139,7 +139,7 @@ canvas.addEventListener('mousemove', (e) => {
   if (isMouseDown) {
     if (mouseButton === 0 && stage && stage.draggingBlock) {
       // normal block drag
-      stage.updateDrag(pos.x, pos.y);
+      stage.updateBlockDrag(pos.x, pos.y);
     } else if (mouseButton === 1) {
       // middle‑button pan: move camera opposite to mouse movement,
       // taking zoom level into account
@@ -156,7 +156,7 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseup', (e) => {
   // End drag on left mouse up
   if (stage && stage.draggingBlock && e.button === 0) {
-    stage.endDrag();
+    stage.endBlockDrag();
   }
   if (e.button === 2 && stage) {
     stage.endRightDrag();
@@ -166,7 +166,7 @@ canvas.addEventListener('mouseup', (e) => {
 });
 
 canvas.addEventListener('mouseleave', () => {
-  if (stage) stage.endDrag();
+  if (stage) stage.endBlockDrag();
   if (stage) stage.endRightDrag();
   isMouseDown = false;
   mouseButton = null;
@@ -216,10 +216,16 @@ function handleMouseDown(e) {
 
     // normal left‑click behaviour: try to begin dragging a block
     if (stage) {
-      const started = stage.startDrag(pos.x, pos.y);
+      const started = stage.startBlockDrag(pos.x, pos.y);
       if (started) return;
     }
     return;
+  }
+
+  // Middle button
+  if( button === 1) {
+    // Stop any block dragging
+    stage.endBlockDrag();
   }
 
   if (button === 2) {
@@ -232,12 +238,6 @@ function handleMouseDown(e) {
       }
     }
     return;
-  }
-
-  switch(button) {
-    case 1: // Middle click
-      stage.endDrag();
-      break;
   }
 }
 
@@ -295,7 +295,7 @@ function gameLoop(timestamp = performance.now()) {
   // If user is dragging a block and holding WASD (camera moved), keep the dragged block under the cursor
   if (stage && stage.draggingBlock && hasMousePos) {
     const pos = getMapCoordsFromClient(lastMouseX, lastMouseY);
-    stage.updateDrag(pos.x, pos.y);
+    stage.updateBlockDrag(pos.x, pos.y);
   }
   
   const startRender = performance.now();
