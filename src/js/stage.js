@@ -555,7 +555,6 @@ class Stage {
       return null;
     }
     if (!this.rightDragToggled.has(obj)) {
-      console.log(this.rightDragToggled);
       obj.toggle();
       this.rightDragToggled.add(obj);
       return obj;
