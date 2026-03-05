@@ -96,7 +96,7 @@
   "wires" : {
     "spriteSheet": "wires.png",
     "spriteSheetSize": {
-      "rows": 10, "columns": 8, "count": 76
+      "rows": 10, "columns": 8, "count": 78
     },
     "spriteOffset": 176,
     "3dSpriteSheet": "wires-3d.png",
@@ -206,7 +206,8 @@
       "wall-up": [69, 70],
       "wall-right": [71, 72],
       "wall-down:": [73, 74],
-      "circle-up-left-down": [75, 76]
+      "circle-up-left-down": [75, 76],
+      "heart": [77, 78]
     },
     "spriteMap": "data/wire-map.json"
   }
