@@ -96,7 +96,6 @@ canvas.addEventListener('wheel', (e) => {
     cameraX = mapX - canvasX / zoomLevel;
     cameraY = mapY - canvasY / zoomLevel;
     clampCamera();
-    render();
   }
 });
 
@@ -141,14 +140,15 @@ canvas.addEventListener('mousemove', (e) => {
     if (mouseButton === 0 && stage && stage.draggingBlock) {
       // normal block drag
       stage.updateDrag(pos.x, pos.y);
-      render();
     } else if (mouseButton === 1) {
       // middle‑button pan: move camera opposite to mouse movement,
       // taking zoom level into account
       cameraX -= dx / zoomLevel;
       cameraY -= dy / zoomLevel;
       clampCamera();
-      render();
+    } else if (mouseButton === 2 && stage) {
+      // right‑button drag – toggle wires exactly once per object
+      const toggled = stage.handleRightDragAt(pos.x, pos.y);
     }
   }
 });
@@ -158,12 +158,16 @@ canvas.addEventListener('mouseup', (e) => {
   if (stage && stage.draggingBlock && e.button === 0) {
     stage.endDrag();
   }
+  if (e.button === 2 && stage) {
+    stage.endRightDrag();
+  }
   isMouseDown = false;
   mouseButton = null;
 });
 
 canvas.addEventListener('mouseleave', () => {
   if (stage) stage.endDrag();
+  if (stage) stage.endRightDrag();
   isMouseDown = false;
   mouseButton = null;
   hasMousePos = false;
@@ -206,7 +210,6 @@ function handleMouseDown(e) {
     if (keys.g) {
       if (stage) {
         const added = stage.addBlockToTempAt(pos.x, pos.y);
-        if (added) render();
       }
       return;
     }
@@ -222,9 +225,9 @@ function handleMouseDown(e) {
   if (button === 2) {
     // Right click – toggle wire only
     if (stage) {
-      const toggled = stage.isClicked(pos.x, pos.y);
+      stage.startRightDrag();
+      const toggled = stage.handleRightDragAt(pos.x, pos.y);
       if (toggled) {
-        render();
         return;
       }
     }

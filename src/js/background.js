@@ -143,14 +143,14 @@ class Background {
     if (row >= 0 && row < this.tiles.length && col >= 0 && col < this.tiles[row].length) {
       const tile = this.tiles[row][col];
       if (tile && tile.isClicked(mapX, mapY)) {
-        if (tile.toggle()) return tile.wire;
+        if (tile.wire != null) return tile.wire;
       }
     }
     // Check ground tiles for wires
     if (row >= 0 && row < this.groundTiles.length && col >= 0 && col < this.groundTiles[row].length) {
       const groundTile = this.groundTiles[row][col];
       if (groundTile && groundTile.isClicked(mapX, mapY)) {
-        if (groundTile.toggle()) return groundTile.wire;
+        if (groundTile.wire != null) return groundTile.wire;
       }
     }
 

@@ -25,6 +25,10 @@ class Stage {
     // snap threshold for snapping horizontals/veritically
     this.snapThreshold = 0;
     this.snapToGrid = true;
+
+    // for right‑button dragging: remember which objects have been
+    // toggled so we only flip each one once per press
+    this.rightDragToggled = new Set();
   }
 
   async load(dataPath) {
@@ -152,25 +156,22 @@ class Stage {
     // gate‑arms take top priority
     for (const arm of this.gateArms) {
       if (arm.isClicked(mapX, mapY)) {
-        arm.toggle();
         return arm;
       }
     }
 
     // then gate blocks
     for (const g of this.gates) {
-      if (g.isClicked(mapX, mapY)) {
-        if (g.toggle()) return g.wire;
-        return g;
+      if (g.isClicked(mapX, mapY) && g.wire != null) {
+        return g.wire;
       }
     }
 
-    // previous logic for squares and background
+    // Check squares
     for (let i = this.squares.length - 1; i >= 0; i--) {
       const s = this.squares[i];
-      if (s.isClicked(mapX, mapY)) {
-        if (s.toggle()) return s.wire;
-        return s;
+      if (s.isClicked(mapX, mapY) && s.wire != null) {
+        return s.wire;
       }
     }
 
@@ -542,5 +543,27 @@ class Stage {
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
     ctx.restore();
+  }
+
+  startRightDrag() {
+    this.rightDragToggled.clear();
+  }
+
+  handleRightDragAt(mapX, mapY) {
+    const obj = this.isClicked(mapX, mapY);
+    if (!obj) {
+      return null;
+    }
+    if (!this.rightDragToggled.has(obj)) {
+      console.log(this.rightDragToggled);
+      obj.toggle();
+      this.rightDragToggled.add(obj);
+      return obj;
+    }
+    return null;
+  }
+
+  endRightDrag() {
+    this.rightDragToggled.clear();
   }
 }
