@@ -197,7 +197,7 @@ class Background {
     const row = Math.floor(wire.y / this.tileSize);
     if (row < 0 || row >= this.height || col < 0 || col >= this.width) return;
 
-    const main = this.tiles[row][col];
+    const main = this.tiles[row][col] || this.groundTiles[row][col];
     if( main.wire.spriteId == wire.spriteId) {
       wire.draw(this.cacheCtx, 0, 0, this.cacheCanvas.width, this.cacheCanvas.height, 1);
     }

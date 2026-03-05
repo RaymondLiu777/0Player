@@ -369,6 +369,7 @@ class Stage {
     const viewHeight = canvasHeight / zoomLevel;
     const highlightedBlocks = [];
 
+    this.squares.sort((a, b) => (a.x + a.y) - (b.x + b.y));
     // draw blocks and handle their 2.5‑D overlap
     for (const block of this.squares) {
       if (block.x + block.tileSize.w < cameraX || block.x > cameraX + viewWidth ||
