@@ -23,7 +23,7 @@ This recreation of the does NOT have:
 ## Controls for the image editor (not for the game)
 - WASD/Drag Scroll Wheel: Move camera
 - QE/Scroll Wheel: Zoom in and zoom out
-- Left Click + Drag: Move tiles
+- Left Click + Drag: Move blocks
 - Right Click/Hold: Toggle sprite
-- Hold G + Left Click: Group tiles
-- Hold G + Right Click: Ungroup tiles
+- Hold G + Left Click: Group blocks
+- Hold G + Right Click: Ungroup blocks
