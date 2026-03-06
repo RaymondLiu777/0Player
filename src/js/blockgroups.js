@@ -53,6 +53,7 @@ class BlockGroups {
       this.disbandGroup(gid);
     }
 
+    
     if(this.tempSelection.size > 1) {
       // Create new group
       const gid = this.nextGroupId++;
@@ -64,7 +65,6 @@ class BlockGroups {
     }
 
     this.clearTemp();
-    return gid;
   }
 
   getGroupFor(blockId) {
