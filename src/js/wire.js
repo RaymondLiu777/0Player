@@ -13,7 +13,7 @@ class Wire extends Sprite {
    */
   constructor(spriteId, location, spriteSheet, tileSize, height,
               framesList, currentIndex, name,
-              sprite3DSheet, frames3D, directions3D = null) {
+              sprite3DSheet, frames3D, directions3D = {right: true, down: true}) {
     const startIndex = Math.max(0, Math.min(currentIndex, framesList.length - 1));
     const initialFrame = framesList[startIndex] || null;
     super(spriteId, spriteSheet, initialFrame, location, tileSize, height);
@@ -24,14 +24,25 @@ class Wire extends Sprite {
     this.name = name;
     this.sprite3DSheet = sprite3DSheet; 
     this.frames3D = frames3D; // { height: { direction: [offFrame, onFrame] } }
-    if (directions3D === null) {
-      this.directions3D = {
-        "right": true,
-        "down": true
-      }
+
+    // Calculate directions 3D
+    const isCircleAll = this.name === 'circle-all';
+    let right = isCircleAll || this.name.includes('right') || this.name.includes('horizontal');
+    let down = isCircleAll || this.name.includes('down') || this.name.includes('vertical');
+    if(this.name == "cross-over") {
+      right = true;
+      down = true;
     }
-    else {
-      this.directions3D = directions3D
+    // Override right/down if directions3D is false
+    if(directions3D.right === false) {
+      right = false
+    }
+    if(directions3D.down === false) {
+      down = false
+    }
+    this.directions3D = {
+      "right": right,
+      "down": down
     }
   }
 
@@ -62,25 +73,13 @@ class Wire extends Sprite {
       const hmap = this.frames3D[this.height];
       if (hmap) {
         // Check name for directions
-        const isCircleAll = this.name === 'circle-all';
-        let right = isCircleAll || this.name.includes('right') || this.name.includes('horizontal');
-        let down = isCircleAll || this.name.includes('down') || this.name.includes('vertical');
         let rightOn = this.currentIndex;
         let downOn = this.currentIndex;
         if(this.name == "cross-over") {
-          right = true;
-          down = true;
           rightOn = Math.floor(rightOn / 2);
           downOn = downOn % 2;
         }
-        // Override right/down if directions3D is false
-        if(this.directions3D.right === false) {
-          right = false
-        }
-        if(this.directions3D.down === false) {
-          down = false
-        }
-        if (right) {
+        if (this.directions3D.right) {
           const dirFrames = hmap['right'];
           const f = dirFrames[rightOn];
           ctx.drawImage(
@@ -91,7 +90,7 @@ class Wire extends Sprite {
           );
         }
 
-        if (down) {
+        if (this.directions3D.down) {
           const dirFrames = hmap['down'];
           const f = dirFrames[downOn];
           ctx.drawImage(

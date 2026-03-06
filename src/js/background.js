@@ -189,8 +189,7 @@ class Background {
   }
 
   /**
-   * Re‑draw a single tile / wire when the wire state changes.
-   * harmless if the wire isn’t on a background tile.
+   * Re‑draw wire when the wire state changes to cache.
    */
   updateCache(wire) {
     const col = Math.floor(wire.x / this.tileSize);
@@ -198,9 +197,119 @@ class Background {
     if (row < 0 || row >= this.height || col < 0 || col >= this.width) return;
 
     const main = this.tiles[row][col] || this.groundTiles[row][col];
-    if( main.wire.spriteId == wire.spriteId) {
+    if (main && main.wire && main.wire.spriteId == wire.spriteId) {
       wire.draw(this.cacheCtx, 0, 0, this.cacheCanvas.width, this.cacheCanvas.height, 1);
+
+      // collect any other tiles that should be re‑rendered
+      const dirty = this.getOccludedDirtyTiles(wire);
+      console.log(dirty);
+      for (const t of dirty) {
+        t.draw(this.cacheCtx, 0, 0, this.cacheCanvas.width, this.cacheCanvas.height, 1);
+      }
     }
+  }
+
+  /**
+   * Determine which tiles are “occluded”/need rerendering when a
+   * wire or block is updated.
+   *
+   * The algorithm begins with the tile under the item and then performs
+   * a breadth‑first search of neighbouring tiles that might cast a
+   * shadow (right, bottom and bottom‑right).  The BFS rules are based
+   * on 3‑D flags (`hide3D`, `directions3D`) and tile category.
+   *
+   * @param {{x:number,y:number}} item  wire or block object with coords
+   * @returns {Tile[]} list of tile objects that should be redrawn
+   */
+  getOccludedDirtyTiles(item) {
+    const dirty = [];
+    const queue = [];
+    const visited = new Set();
+
+    const enqueue = (r, c) => {
+      const key = `${r},${c}`;
+      if (visited.has(key)) return;
+      visited.add(key);
+      queue.push({ row: r, col: c });
+    };
+
+    const checkNeighborsHeight = (height, row, col) => {
+      const currentHeight = height;
+      if (col + 1 < this.width) {
+        const right = this.tiles[row][col + 1] || this.groundTiles[row][col + 1];
+        if (right && right.height > currentHeight) {
+          enqueue(row, col + 1);
+        }
+      }
+      if (row + 1 < this.height) {
+        const down = this.tiles[row + 1][col] || this.groundTiles[row + 1][col];
+        if (down && down.height > currentHeight) {
+          enqueue(row + 1, col);
+        }
+      }
+    }
+
+    const startCol = Math.floor(item.x / this.tileSize);
+    const startRow = Math.floor(item.y / this.tileSize);
+
+    // start with the tile under the object
+    enqueue(startRow, startCol);
+
+    // if it's a wire, include immediate neighbours that
+    // might be affected by its 3‑D shadow directions
+    if (item instanceof Wire) {
+      checkNeighborsHeight(item.height, startRow, startCol);
+      if (item.directions3D.right) {
+        enqueue(startRow, startCol + 1);
+        enqueue(startRow + 1, startCol + 1);
+      }
+      if (item.directions3D.down) {
+        enqueue(startRow + 1, startCol);
+        enqueue(startRow + 1, startCol + 1);
+      }
+    }
+
+    // BFS – walk neighbours looking for further occluders
+    while (queue.length) {
+      const { row, col } = queue.shift();
+      if (row < 0 || row >= this.height || col < 0 || col >= this.width) {
+        continue;
+      }
+
+      const tile = this.tiles[row][col];
+      if (!tile || tile.height === 0) continue;
+
+      dirty.push(tile);
+
+      // Check neighbor heights
+      checkNeighborsHeight(tile.height, row, col);
+
+      // barrier/gate rules drive further propagation
+      if(tile.category === 'wall') {
+        if (!tile.hide3D.right) {
+          enqueue(row, col + 1);
+          enqueue(row + 1, col + 1);
+        }
+        if (!tile.hide3D.down) {
+          enqueue(row + 1, col);
+          enqueue(row + 1, col + 1);
+        }
+      }
+      else if (tile.category === 'barrier') {
+        if (!tile.hide3D.all) {
+          enqueue(row, col + 1);
+          enqueue(row + 1, col);
+          enqueue(row + 1, col + 1);
+        }
+      } else if (tile.category === 'gate') {
+        enqueue(row, col + 1);
+        enqueue(row + 1, col);
+        enqueue(row + 1, col + 1);
+      }
+    }
+
+    dirty.sort((a, b) => (a.x + a.y) - (b.x + b.y));
+    return dirty;
   }
 
   addGates(gates) {
@@ -212,7 +321,7 @@ class Background {
         this.tiles[row][col] = gate;
       }
     }
-  }
+  }f
 
   attachWires(wires) {
     for (const w of wires) {
