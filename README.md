@@ -25,4 +25,5 @@ This recreation of the does NOT have:
 - QE/Scroll Wheel: Zoom in and zoom out
 - Left Click + Drag: Move tiles
 - Right Click/Hold: Toggle sprite
-- Hold G + Left Click: Group/Ungroup tiles
+- Hold G + Left Click: Group tiles
+- Hold G + Right Click: Ungroup tiles

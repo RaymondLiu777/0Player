@@ -183,6 +183,19 @@ class Stage {
     return sq;
   }
 
+  removeBlockFromGroup(mapX, mapY) {
+    const sq = this.findTopSquareAt(mapX, mapY);
+    if (!sq) return;
+    const inTemp = this.groups.removeTemp(sq.spriteId);
+    console.log(inTemp);
+    if (!inTemp) {
+      const groupId = this.groups.getGroupFor(sq.spriteId);
+      if(groupId) {
+        this.groups.disbandGroup(groupId)
+      }
+    }
+  }
+
   finalizeGrouping() {
     if (!this.isGrouping) return null;
     const gid = this.groups.finalizeTemp();

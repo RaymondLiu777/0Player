@@ -121,7 +121,49 @@ canvas.addEventListener('mousedown', (e) => {
   hasMousePos = true;
   mouseButton = e.button; // 0 = left, 1 = middle, 2 = right
 
-  handleMouseDown(e);
+  const pos = getMapCoordsFromEvent(e);
+  if (mouseButton === 0) {
+    // Left click – either add to the temporary group (if G is held) or start a drag.
+    if (keys.g) {
+      if (stage) {
+        stage.addBlockToTempAt(pos.x, pos.y);
+      }
+      return;
+    }
+
+    // normal left‑click behaviour: try to begin dragging a block
+    if (stage) {
+      const started = stage.startBlockDrag(pos.x, pos.y);
+      if (started) return;
+    }
+    return;
+  }
+
+  // Middle button
+  if( mouseButton === 1) {
+    // Stop any block dragging
+    stage.endBlockDrag();
+  }
+
+  if (mouseButton === 2) {
+    // If G held, remove groups
+    if (keys.g) {
+      if (stage) {
+        stage.removeBlockFromGroup(pos.x, pos.y);
+      }
+      return;
+    }
+
+    // Right click – toggle wire only
+    if (stage) {
+      stage.startRightDrag();
+      const toggled = stage.handleRightDragAt(pos.x, pos.y);
+      if (toggled) {
+        return;
+      }
+    }
+    return;
+  }
 });
 
 canvas.addEventListener('mousemove', (e) => {
@@ -141,13 +183,16 @@ canvas.addEventListener('mousemove', (e) => {
     if (mouseButton === 0 && stage && stage.draggingBlock) {
       // normal block drag
       stage.updateBlockDrag(pos.x, pos.y);
-    } else if (mouseButton === 1) {
+    } else if (mouseButton === 0 && keys.g && stage) {
+      stage.addBlockToTempAt(pos.x, pos.y);
+    }
+    else if (mouseButton === 1) {
       // middle‑button pan: move camera opposite to mouse movement,
       // taking zoom level into account
       cameraX -= dx / zoomLevel;
       cameraY -= dy / zoomLevel;
       clampCamera();
-    } else if (mouseButton === 2 && stage) {
+    } else if (mouseButton === 2 && !keys.g && stage) {
       // right‑button drag – toggle wires exactly once per object
       const toggled = stage.handleRightDragAt(pos.x, pos.y);
     }
@@ -200,47 +245,6 @@ window.addEventListener('keyup', (e) => {
     }
   }
 });
-
-// Handle different mouse button clicks
-function handleMouseDown(e) {
-  const button = e.button;
-  const pos = getMapCoordsFromEvent(e);
-
-  if (button === 0) {
-    // Left click – either add to the temporary group (if G is held) or start a drag.
-    if (keys.g) {
-      if (stage) {
-        const added = stage.addBlockToTempAt(pos.x, pos.y);
-      }
-      return;
-    }
-
-    // normal left‑click behaviour: try to begin dragging a block
-    if (stage) {
-      const started = stage.startBlockDrag(pos.x, pos.y);
-      if (started) return;
-    }
-    return;
-  }
-
-  // Middle button
-  if( button === 1) {
-    // Stop any block dragging
-    stage.endBlockDrag();
-  }
-
-  if (button === 2) {
-    // Right click – toggle wire only
-    if (stage) {
-      stage.startRightDrag();
-      const toggled = stage.handleRightDragAt(pos.x, pos.y);
-      if (toggled) {
-        return;
-      }
-    }
-    return;
-  }
-}
 
 // Function to render the game
 function render() {

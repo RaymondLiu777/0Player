@@ -8,12 +8,17 @@ class BlockGroups {
 
   addTemp(blockId) {
     if(!this.tempSelection.has(blockId)) {
-        this.tempSelection.add(blockId);
-    }
-    else {
-        this.tempSelection.delete(blockId);
+      this.tempSelection.add(blockId);
     }
   }
+
+  removeTemp(blockId) {
+    if(this.tempSelection.has(blockId)) {
+      this.tempSelection.delete(blockId);
+      return true;
+    }
+    return false;
+  } 
 
   clearTemp() {
     this.tempSelection.clear();
@@ -48,12 +53,14 @@ class BlockGroups {
       this.disbandGroup(gid);
     }
 
-    // Create new group
-    const gid = this.nextGroupId++;
-    const members = Array.from(this.tempSelection);
-    this.groupToBlocks[gid] = members;
-    for (const bid of members) {
-      this.blockToGroup[bid] = gid;
+    if(this.tempSelection.size > 1) {
+      // Create new group
+      const gid = this.nextGroupId++;
+      const members = Array.from(this.tempSelection);
+      this.groupToBlocks[gid] = members;
+      for (const bid of members) {
+        this.blockToGroup[bid] = gid;
+      }
     }
 
     this.clearTemp();
