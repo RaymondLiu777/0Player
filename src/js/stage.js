@@ -187,7 +187,6 @@ class Stage {
     const sq = this.findTopSquareAt(mapX, mapY);
     if (!sq) return;
     const inTemp = this.groups.removeTemp(sq.spriteId);
-    console.log(inTemp);
     if (!inTemp) {
       const groupId = this.groups.getGroupFor(sq.spriteId);
       if(groupId) {
