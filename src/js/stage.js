@@ -410,7 +410,7 @@ class Stage {
     for (const arm of this.gateArms) {
       arm.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
     }
-    // console.log(rerenderedCount);
+    // console.log("Rerendered Background Tile Count: ", rerenderedCount);
   }
 
   // Draw a mask-based highlight for a block that respects sprite edges

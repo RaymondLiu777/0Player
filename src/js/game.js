@@ -35,6 +35,9 @@ let mouseButton = null; // Track which button is pressed
 // Stage instance (contains background and wires)
 let stage = null;
 
+// background cache needs to be rerendered (if switching back from other tab)
+let cacheIsDirty = false;
+
 // Track keyboard state
 const keys = {
   w: false,
@@ -246,6 +249,26 @@ window.addEventListener('keyup', (e) => {
   }
 });
 
+window.addEventListener('blur', () => {
+  // Reset all keys to false so the camera doesn't drift
+  for (let key in keys) {
+    keys[key] = false;
+  }
+  isMouseDown = false;
+  if (stage) {
+    stage.endBlockDrag();
+    stage.endRightDrag();
+  }
+});
+
+// When switching back to tab, mark cache as dirty (otherwise cause lots of lag)
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    cacheIsDirty = true;
+    lastTime = performance.now();
+  }
+});
+
 // Function to render the game
 function render() {
   // Clear canvas
@@ -304,6 +327,10 @@ function gameLoop(timestamp = performance.now()) {
   }
   
   const startRender = performance.now();
+  if (cacheIsDirty && stage && stage.background) {
+    stage.background.renderCache();
+    cacheIsDirty = false;
+  }
   render();
   const endRender = performance.now();
   
