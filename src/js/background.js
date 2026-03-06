@@ -202,7 +202,6 @@ class Background {
 
       // collect any other tiles that should be re‑rendered
       const dirty = this.getOccludedDirtyTiles(wire);
-      console.log(dirty);
       for (const t of dirty) {
         t.draw(this.cacheCtx, 0, 0, this.cacheCanvas.width, this.cacheCanvas.height, 1);
       }
