@@ -218,7 +218,7 @@ class Background {
    * shadow (right, bottom and bottom‑right).  The BFS rules are based
    * on 3‑D flags (`hide3D`, `directions3D`) and tile category.
    *
-   * @param {{x:number,y:number}} item  wire or block object with coords
+   * @param {Object} item  wire or block object with coords
    * @returns {Tile[]} list of tile objects that should be redrawn
    */
   getOccludedDirtyTiles(item) {
@@ -253,11 +253,12 @@ class Background {
     const startRow = Math.floor(item.y / this.tileSize);
 
     // start with the tile under the object
-    enqueue(startRow, startCol);
+    
 
     // if it's a wire, include immediate neighbours that
     // might be affected by its 3‑D shadow directions
     if (item instanceof Wire) {
+      enqueue(startRow, startCol);
       checkNeighborsHeight(item.height, startRow, startCol);
       if (item.directions3D.right) {
         enqueue(startRow, startCol + 1);
@@ -267,6 +268,13 @@ class Background {
         enqueue(startRow + 1, startCol);
         enqueue(startRow + 1, startCol + 1);
       }
+    }
+
+    if (item instanceof Block) {
+      visited.add(`${startRow},${startCol}`);
+      enqueue(startRow, startCol + 1);
+      enqueue(startRow + 1, startCol);
+      enqueue(startRow + 1, startCol + 1);
     }
 
     // BFS – walk neighbours looking for further occluders

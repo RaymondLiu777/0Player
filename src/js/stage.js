@@ -198,10 +198,9 @@ class Stage {
 
   finalizeGrouping() {
     if (!this.isGrouping) return null;
-    const gid = this.groups.finalizeTemp();
+    this.groups.finalizeTemp();
     this.isGrouping = false;
     this.recomputeHighlights();
-    return gid;
   }
 
   hoverAt(mapX, mapY) {
@@ -380,7 +379,7 @@ class Stage {
 
     const viewWidth = canvasWidth / zoomLevel;
     const viewHeight = canvasHeight / zoomLevel;
-    const highlightedBlocks = [];
+    let rerenderedCount = 0;
 
     this.squares.sort((a, b) => (a.x + a.y) - (b.x + b.y));
     // draw blocks and handle their 2.5‑D overlap
@@ -391,18 +390,28 @@ class Stage {
       }
 
       block.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
-      if (block.highlighted) highlightedBlocks.push(block);
+      if (block.highlighted) this.drawBlockHighlight(ctx, block, cameraX, cameraY, zoomLevel);
+
+      // Check if block is perfectly on a grid and not on a stage tile
+      if (block.x % this.tileSize === 0 && block.y % this.tileSize === 0) {
+        const row = Math.floor(block.y / this.tileSize);
+        const col = Math.floor(block.x / this.tileSize);
+        const tile = this.background.tiles?.[row]?.[col];
+        if( tile === null) {
+          const dirty = this.background.getOccludedDirtyTiles(block);
+          for (const t of dirty) {
+            t.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
+            rerenderedCount++;
+          }
+        }
+      }
     }
 
     // gate arms continue to be rendered on top of blocks
     for (const arm of this.gateArms) {
       arm.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
     }
-
-    // highlights
-    for (const b of highlightedBlocks) {
-      this.drawBlockHighlight(ctx, b, cameraX, cameraY, zoomLevel);
-    }
+    // console.log(rerenderedCount);
   }
 
   // Draw a mask-based highlight for a block that respects sprite edges
