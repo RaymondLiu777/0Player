@@ -399,7 +399,6 @@ class Stage {
 
     const viewWidth = canvasWidth / zoomLevel;
     const viewHeight = canvasHeight / zoomLevel;
-    let rerenderedCount = 0;
 
     const renderQueue = [];
     const nonalignedBlocks = [];
@@ -457,7 +456,6 @@ class Stage {
       }
       else {
         item.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
-        rerenderedCount++;
       }
     }
 
@@ -466,7 +464,6 @@ class Stage {
       block.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
       if (block.highlighted) this.drawBlockHighlight(ctx, block, cameraX, cameraY, zoomLevel);
     }
-    console.log("Rerendered Background Tile Count: ", rerenderedCount);
   }
 
   // Draw a mask-based highlight for a block that respects sprite edges

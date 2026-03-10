@@ -13,7 +13,7 @@ class Gate extends Tile {
    */
   constructor(spriteId, spriteSheet, spriteFrame, location, tileSize, height,
               wire = null, gateArms = [], direction = null, startPosition = null) {
-    super(spriteId, location, spriteSheet, spriteFrame,
+    super(spriteId, location, spriteSheet, null, spriteFrame,
           tileSize, height, 'gate', wire);
 
     this.gateArms = gateArms;
@@ -195,7 +195,6 @@ class Gate extends Tile {
         gate.gateArms = gatearms;
       }
     }
-    console.log(arms);
     return { gates, arms };
   }
 }

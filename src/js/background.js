@@ -336,7 +336,7 @@ class Background {
         this.tiles[row][col] = gate;
       }
     }
-  }f
+  }
 
   attachWires(wires) {
     for (const w of wires) {
