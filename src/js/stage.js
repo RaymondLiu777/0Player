@@ -380,37 +380,71 @@ class Stage {
     const viewHeight = canvasHeight / zoomLevel;
     let rerenderedCount = 0;
 
-    this.squares.sort((a, b) => (a.x + a.y) - (b.x + b.y));
-    // draw blocks and handle their 2.5‑D overlap
+    const renderQueue = [];
+    const nonalignedBlocks = [];
     for (const block of this.squares) {
+      // Cull off-screen blocks
       if (block.x + block.tileSize.w < cameraX || block.x > cameraX + viewWidth ||
           block.y + block.tileSize.h < cameraY || block.y > cameraY + viewHeight) {
-        continue; // Cull off-screen blocks
+        continue;
       }
+      // Any blocks that either aren't aligned or on a stage tile get drawn last
+      const row = Math.floor(block.y / this.tileSize);
+      const col = Math.floor(block.x / this.tileSize);
+      if (block.x % this.tileSize === 0 && block.y % this.tileSize === 0 && this.background.tiles?.[row]?.[col] === null) {
+        renderQueue.push(block);
+      }
+      else {
+        nonalignedBlocks.push(block);
+      }
+    }
 
-      block.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
-      if (block.highlighted) this.drawBlockHighlight(ctx, block, cameraX, cameraY, zoomLevel);
+    // Also render gate arms
+    for (const arm of this.gateArms) {
+      // Cull off-screen gatearms
+      if (arm.x + arm.tileSize.w < cameraX || arm.x > cameraX + viewWidth ||
+          arm.y + arm.tileSize.h < cameraY || arm.y > cameraY + viewHeight) {
+        continue;
+      }
+      renderQueue.push(arm);
+    }
 
-      // Check if block is perfectly on a grid and not on a stage tile
-      if (block.x % this.tileSize === 0 && block.y % this.tileSize === 0) {
-        const row = Math.floor(block.y / this.tileSize);
-        const col = Math.floor(block.x / this.tileSize);
-        const tile = this.background.tiles?.[row]?.[col];
-        if( tile === null) {
-          const dirty = this.background.getOccludedDirtyTiles(block);
-          for (const t of dirty) {
-            t.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
-            rerenderedCount++;
+    const redrawnTiles = new Set();
+    const renderOrder = (a, b) => {return (a.x + a.y) - (b.x + b.y);};
+    renderQueue.sort(renderOrder);
+    // draw blocks and handle their 2.5‑D overlap
+    while (renderQueue.length > 0) {
+      const item = renderQueue.shift();
+      if (item instanceof Block || item instanceof GateArm) {
+        item.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
+        if (item instanceof Block && item.highlighted) this.drawBlockHighlight(ctx, item, cameraX, cameraY, zoomLevel);
+
+        // These blocks must be perfectly aligned and might need to rerender blocks underneath
+        const dirty = this.background.getOccludedDirtyTiles(item);
+        for (const t of dirty) {
+          if (t.x + t.tileSize.w < cameraX || t.x > cameraX + viewWidth ||
+              t.y + t.tileSize.h < cameraY || t.y > cameraY + viewHeight) {
+            continue;
+          }
+          const tileKey = `${t.x},${t.y}`;
+          if (!redrawnTiles.has(tileKey)) {
+            redrawnTiles.add(tileKey);
+            renderQueue.push(t);
           }
         }
+        renderQueue.sort(renderOrder);
+      }
+      else {
+        item.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
+        rerenderedCount++;
       }
     }
 
-    // gate arms continue to be rendered on top of blocks
-    for (const arm of this.gateArms) {
-      arm.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
+    for (const block of nonalignedBlocks) {
+      block.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
+      if (block.highlighted) this.drawBlockHighlight(ctx, block, cameraX, cameraY, zoomLevel);
     }
-    // console.log("Rerendered Background Tile Count: ", rerenderedCount);
+    console.log("Rerendered Background Tile Count: ", rerenderedCount);
   }
 
   // Draw a mask-based highlight for a block that respects sprite edges
@@ -464,7 +498,16 @@ class Stage {
 
     if (!this.rightDragToggled.has(obj)) {
       obj.toggle();
-      this.rightDragToggled.add(obj);
+      
+
+      if(obj instanceof GateArm) {
+        // Add all gate arms to toggled
+        for (const arm of obj.gateblock.gateArms) {
+          this.rightDragToggled.add(arm);
+        }
+      } else {
+        this.rightDragToggled.add(obj);
+      }
 
       // if the toggle affected a background wire, update the cache
       if (obj instanceof Wire && this.background) {

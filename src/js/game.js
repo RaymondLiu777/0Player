@@ -348,8 +348,17 @@ function clampCamera() {
   const mapHeight = stage.background.height * stage.background.tileSize - 16;
   const viewWidth = canvas.width / zoomLevel;
   const viewHeight = canvas.height / zoomLevel;
-  cameraX = Math.max(0, Math.min(cameraX, Math.max(0, mapWidth - viewWidth)));
-  cameraY = Math.max(0, Math.min(cameraY, Math.max(0, mapHeight - viewHeight)));
+  // If map is wider than view, clamp. Otherwise, center it.
+  if (mapWidth > viewWidth) {
+    cameraX = Math.max(0, Math.min(cameraX, mapWidth - viewWidth));
+  } else {
+    cameraX = (mapWidth - viewWidth) / 2; 
+  }
+  if (mapHeight > viewHeight) {
+    cameraY = Math.max(0, Math.min(cameraY, mapHeight - viewHeight));
+  } else {
+    cameraY = (mapHeight - viewHeight) / 2;
+  }
 }
 
 

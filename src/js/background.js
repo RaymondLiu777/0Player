@@ -248,15 +248,11 @@ class Background {
       }
     }
 
-    const startCol = Math.floor(item.x / this.tileSize);
-    const startRow = Math.floor(item.y / this.tileSize);
-
-    // start with the tile under the object
-    
-
     // if it's a wire, include immediate neighbours that
     // might be affected by its 3‑D shadow directions
     if (item instanceof Wire) {
+      const startCol = Math.floor(item.x / this.tileSize);
+      const startRow = Math.floor(item.y / this.tileSize);
       enqueue(startRow, startCol);
       checkNeighborsHeight(item.height, startRow, startCol);
       if (item.directions3D.right) {
@@ -270,10 +266,20 @@ class Background {
     }
 
     if (item instanceof Block) {
+      const startCol = Math.floor(item.x / this.tileSize);
+      const startRow = Math.floor(item.y / this.tileSize);
       visited.add(`${startRow},${startCol}`);
       enqueue(startRow, startCol + 1);
       enqueue(startRow + 1, startCol);
       enqueue(startRow + 1, startCol + 1);
+    }
+
+    if (item instanceof GateArm) {
+      const col = Math.floor(item.x / this.tileSize);
+      const row = Math.floor(item.y / this.tileSize);
+      enqueue(row+1, col);
+      enqueue(row, col+1);
+      enqueue(row+1, col+1);
     }
 
     // BFS – walk neighbours looking for further occluders

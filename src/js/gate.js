@@ -7,16 +7,16 @@ class Gate extends Tile {
    * @param {number|{w,h}} tileSize   // normal 64×64 world tile
    * @param {number} height
    * @param {Wire|null} wire
-   * @param {GateArm|null} gateArm
+   * @param {GateArm[]} gateArms
    * @param {string|null} direction  // “nw”/“ne”/“sw”/“se”
    * @param {{col:number,row:number}} startPosition
    */
   constructor(spriteId, spriteSheet, spriteFrame, location, tileSize, height,
-              wire = null, gateArm = null, direction = null, startPosition = null) {
+              wire = null, gateArms = [], direction = null, startPosition = null) {
     super(spriteId, location, spriteSheet, spriteFrame,
           tileSize, height, 'gate', wire);
 
-    this.gateArm = gateArm;
+    this.gateArms = gateArms;
     this.direction = direction;
     this.startPosition = startPosition;
   }
@@ -79,7 +79,7 @@ class Gate extends Tile {
         { w: spec.w, h: spec.h },
         gatesData.height,
         null,
-        null,
+        [],
         spec.direction,
         { col, row }
       );
@@ -94,6 +94,7 @@ class Gate extends Tile {
       const { col, row } = gate.startPosition;
       const vertDir = gate.direction.includes('n') ? -1 : 1;
       const horizDir = gate.direction.includes('w') ? 1 : -1;
+      const gatearms = [];
 
       // vertical arm
       let positions = [];
@@ -114,31 +115,32 @@ class Gate extends Tile {
         r += vertDir;
       }
       if (positions.length) {
-        const frame = (gateSprites.vertical || {}).up;
+        const frame = gateSprites.vertical.up;
         // offset the thin arm so it sits between cells
-        const offsetX = horizDir === -1 ? 0 : tileSize - 2;
-        // use the smallest row value
-        const minRow = Math.min(...positions.map(p => p.row));
-        const originX = positions[0].col * tileSize + offsetX;
-        const originY = minRow * tileSize;
-
-        const fullSize = { w: frame.w,
-                           h: tileSize * positions.length};
-        const arm = new GateArm(
-          instanceId,
-          gateImage,
-          gateSprites.vertical.up,
-          gateSprites.vertical.down,
-          { x: originX, y: originY },
-          fullSize,
-          gatesData.height,
-          tileSize,
-          'vertical',
-          positions.length,
-          vUp
-        );
-        arms.push(arm);
-        instanceId += 1;
+        const offsetX = horizDir === -1 ? 2 : tileSize - 2;
+        for ( const position of positions) {
+          const originX = position.col * tileSize + offsetX;
+          const originY = position.row * tileSize;
+          const fullSize = { w: frame.w,
+                           h: tileSize};
+          const arm = new GateArm(
+            instanceId,
+            gateImage,
+            gateSprites.vertical.up,
+            gateSprites.vertical.down,
+            { x: originX, y: originY },
+            fullSize,
+            gatesData.height,
+            tileSize,
+            'vertical',
+            positions.length,
+            vUp,
+            gate
+          );
+          gatearms.push(arm);
+          arms.push(arm);
+          instanceId += 1;
+        }
       }
 
       // horizontal arm
@@ -160,34 +162,40 @@ class Gate extends Tile {
         c += horizDir;
       }
       if (positions.length) {
-        const frame = (gateSprites.horizontal || {}).up;
+        const frame = gateSprites.horizontal.up;
         // offset the thin arm so it sits between cells
         const offsetY = vertDir === -1 ? 0 : tileSize - 2;
-        // take the smallest column value
-        const minCol = Math.min(...positions.map(p => p.col));
-        const originX = minCol * tileSize;
-        const originY = positions[0].row * tileSize + offsetY; 
 
-        const fullSize = { w: tileSize * positions.length,
+        for (const position of positions) {
+          const originX = position.col * tileSize;
+          const originY = position.row * tileSize + offsetY; 
+          const fullSize = { w: tileSize,
                            h: frame.h };
-        const arm = new GateArm(
-          instanceId,
-          gateImage,
-          gateSprites.horizontal.up,
-          gateSprites.horizontal.down,
-          { x: originX, y: originY },
-          fullSize,
-          gatesData.height,
-          tileSize,
-          'horizontal',
-          positions.length,
-          hUp
-        );
-        arms.push(arm);
-        instanceId += 1;
+          const arm = new GateArm(
+            instanceId,
+            gateImage,
+            gateSprites.horizontal.up,
+            gateSprites.horizontal.down,
+            { x: originX, y: originY },
+            fullSize,
+            gatesData.height,
+            tileSize,
+            'horizontal',
+            positions.length,
+            hUp,
+            gate
+          );
+          gatearms.push(arm);
+          arms.push(arm);
+          instanceId += 1;
+        }
+      }
+
+      if (gatearms.length) {
+        gate.gateArms = gatearms;
       }
     }
-
+    console.log(arms);
     return { gates, arms };
   }
 }
@@ -205,10 +213,11 @@ class GateArm extends Sprite {
    * @param {string|null} orientation  'horizontal'|'vertical'
    * @param {number} length           // number of segments
    * @param {boolean} toggledUp
+   * @param {Gate} gateblock
    */
   constructor(spriteId, spriteSheet, upFrame, downFrame, location,
               tileSize, height, gridSize, orientation = null, length = 1,
-              toggledUp = false) {
+              toggledUp = false, gateblock = null) {
     super(spriteId, spriteSheet,
           toggledUp ? upFrame : downFrame,
           location, tileSize, height);
@@ -218,11 +227,15 @@ class GateArm extends Sprite {
     this.orientation = orientation;
     this.length = length;
     this.toggledUp = toggledUp;
+    this.gateblock = gateblock;
   }
 
   toggle() {
-    this.toggledUp = !this.toggledUp;
-    this.spriteFrame = this.toggledUp ? this.upFrame : this.downFrame;
+    const direction = !this.toggledUp;
+    for (const arm of this.gateblock.gateArms) {
+      arm.toggledUp = direction;
+      arm.spriteFrame = direction ? arm.upFrame : arm.downFrame;
+    }
   }
 
   draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel = 1) {
@@ -230,25 +243,17 @@ class GateArm extends Sprite {
     const frameW = this.upFrame.w;
     const frameH = this.upFrame.h;
     const height3D = Math.floor(this.height * zoomLevel);
-
-    for (let i = 0; i < this.length; i++) {
-      let sx = this.x;
-      let sy = this.y;
-      if (this.orientation === 'vertical') {
-        sy += i * this.gridSize;
-      } else if (this.orientation === 'horizontal') {
-        sx += i * this.gridSize;
-      }
-      const screenX = Math.floor((sx - cameraX) * zoomLevel);
-      const screenY = Math.floor((sy - cameraY) * zoomLevel);
-      ctx.drawImage(
-        this.spriteSheet,
-        this.spriteFrame.x, this.spriteFrame.y,
-        this.spriteFrame.w, this.spriteFrame.h,
-        screenX - height3D, screenY - height3D,
-        Math.floor(frameW * zoomLevel),
-        Math.floor(frameH * zoomLevel)
-      );
-    }
+    const sx = this.x;
+    const sy = this.y;
+    const screenX = Math.floor((sx - cameraX) * zoomLevel);
+    const screenY = Math.floor((sy - cameraY) * zoomLevel);
+    ctx.drawImage(
+      this.spriteSheet,
+      this.spriteFrame.x, this.spriteFrame.y,
+      this.spriteFrame.w, this.spriteFrame.h,
+      screenX - height3D, screenY - height3D,
+      Math.floor(frameW * zoomLevel),
+      Math.floor(frameH * zoomLevel)
+    );
   }
 }
