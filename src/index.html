@@ -134,6 +134,19 @@
         settingsOv.addEventListener('click', (e) => {
           if (e.target === settingsOv) hideSettings();
         });
+
+        
+
+        const isTouchDevice = () => {
+          return (('ontouchstart' in window) ||
+            (navigator.maxTouchPoints > 0) ||
+            (navigator.msMaxTouchPoints > 0));
+        };
+        const isMouseUser = window.matchMedia("(pointer: fine)").matches;
+
+        if (isTouchDevice() && !isMouseUser) {
+          alert("Warning, this website's controls require a keyboard and mouse");
+        }
       });
     </script>
 </body>
