@@ -60,7 +60,7 @@ class Stage {
 
       // 2. Apply the darkening once
       tCtx.globalCompositeOperation = 'source-atop';
-      tCtx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      tCtx.fillStyle = 'rgba(0, 0, 0, 0.4)';
       tCtx.fillRect(0, 0, canvas.width, canvas.height);
 
       return canvas;
