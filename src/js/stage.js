@@ -440,6 +440,7 @@ class Stage {
       }
     }
 
+    nonalignedBlocks.sort(renderOrder);
     for (const block of nonalignedBlocks) {
       block.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
       if (block.highlighted) this.drawBlockHighlight(ctx, block, cameraX, cameraY, zoomLevel);
