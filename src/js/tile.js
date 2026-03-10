@@ -9,8 +9,9 @@ class Tile extends Sprite {
    * @param {string|null} category
    * @param {Wire|null} wire
    */
-  constructor(spriteId, location, spriteSheet, spriteFrame, tileSize, height, category, wire) {
+  constructor(spriteId, location, spriteSheet, tintedSpriteSheet, spriteFrame, tileSize, height, category, wire) {
     super(spriteId, spriteSheet, spriteFrame, location, tileSize, height);
+    this.tintedSpriteSheet = tintedSpriteSheet;
     this.category = category;
     this.wire = wire;
     // whether there is another wall immediately to the right/bottom
@@ -38,14 +39,14 @@ class Tile extends Sprite {
 
     if (this.category === 'barrier') {
       if (!this.hide3D.all) {
-        ctx.filter = "brightness(60%)";
+        // ctx.filter = "brightness(60%)";
         ctx.drawImage(
-          this.spriteSheet,
+          this.tintedSpriteSheet,
           this.spriteFrame.x, this.spriteFrame.y, this.spriteFrame.w, this.spriteFrame.h,
           screenX, screenY,
           screenWidth, screenHeight
         );
-        ctx.filter = "none";
+        // ctx.filter = "none";
       }
     } else if (this.category === 'wall') {
       // only draw a side if there isn't another wall adjacent

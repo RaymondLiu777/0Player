@@ -9,8 +9,9 @@ class Block extends Sprite {
    * @param {Wire|null} wire
    * @param {boolean} darkblock
    */
-  constructor(spriteId, location, spriteSheet, spriteFrame, tileSize, height, wire, darkblock) {
+  constructor(spriteId, location, spriteSheet, tintedSpriteSheet, spriteFrame, tileSize, height, wire, darkblock) {
     super(spriteId, spriteSheet, spriteFrame, location, tileSize, height);
+    this.tintedSpriteSheet = tintedSpriteSheet;
     this.wire = wire;
     this.darkblock = darkblock;
     this.highlighted = false;
@@ -44,14 +45,14 @@ class Block extends Sprite {
     const screenH = Math.max(1, nextScreenY - screenY);
 
     // 3‑D shadow
-    ctx.filter = "brightness(60%)";
+    // ctx.filter = "brightness(60%)";
     ctx.drawImage(
-      this.spriteSheet,
+      this.tintedSpriteSheet,
       this.spriteFrame.x, this.spriteFrame.y, this.spriteFrame.w, this.spriteFrame.h,
       screenX, screenY,
       screenW, screenH
     );
-    ctx.filter = "none";
+    // ctx.filter = "none";
 
     // base sprite
     super.draw(ctx, cameraX, cameraY, canvasWidth, canvasHeight, zoomLevel);
@@ -68,7 +69,7 @@ class Block extends Sprite {
     }
   }
 
-  static fromData(blocksData, blocksImage, darkBlocksImage, tileSize = 64) {
+  static fromData(blocksData, blocksImage, tinitedBlocksImg, darkBlocksImage, tileSize = 64) {
     const cols = blocksData.spriteSheetSize.columns;
     const rows = blocksData.spriteSheetSize.rows;
     const total = blocksData.spriteSheetSize.count;
@@ -109,14 +110,14 @@ class Block extends Sprite {
         // Darkblocks
         spriteId -= darkBlockOffset;
         const frame = dFrames[spriteId];
-        const block = new Block(instanceId, { x: col * tileSize, y: row * tileSize }, darkBlocksImage, frame, dSpritesSize, height, null, true);
+        const block = new Block(instanceId, { x: col * tileSize, y: row * tileSize }, darkBlocksImage, tinitedBlocksImg, frame, dSpritesSize, height, null, true);
         blocks.push(block);
       }
       else {
         // Normal blocks
         spriteId -= offset;
         const frame = frames[spriteId];
-        const block = new Block(instanceId, { x: col * tileSize, y: row * tileSize }, blocksImage, frame, tileSize, height, null, false);
+        const block = new Block(instanceId, { x: col * tileSize, y: row * tileSize }, blocksImage, tinitedBlocksImg, frame, tileSize, height, null, false);
         blocks.push(block);
       }
       instanceId += 1;

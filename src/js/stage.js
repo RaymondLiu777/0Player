@@ -30,6 +30,8 @@ class Stage {
     this.rightDragToggled = new Set();
   }
 
+  
+
   async load(dataPath) {
     const dataResp = await fetch(dataPath);
     const data = await dataResp.json();
@@ -46,6 +48,23 @@ class Stage {
         section.backgroundMap = await resp.json();
       }
     };
+
+    const createTintedSheet = (originalSheet) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = originalSheet.width;
+      canvas.height = originalSheet.height;
+      const tCtx = canvas.getContext('2d');
+
+      // 1. Draw the sheet
+      tCtx.drawImage(originalSheet, 0, 0);
+
+      // 2. Apply the darkening once
+      tCtx.globalCompositeOperation = 'source-atop';
+      tCtx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      tCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+      return canvas;
+    }
 
     // resolve all of them in parallel rather than one-by-one
     await Promise.all([
@@ -83,15 +102,17 @@ class Stage {
 
     // --- Background ---
     const bg = new Background(this.tileSize);
+    const tintedBgImg = createTintedSheet(bgImg);
     data.background.mapHeight = data.size.height;
     data.background.mapWidth = data.size.width;
-    bg.load(data.background, bgImg, instructionImg);
+    bg.load(data.background, bgImg, tintedBgImg, instructionImg);
     this.background = bg;
 
     // --- Blocks / Squares ---
+    const tinitedBlocksImg = createTintedSheet(blocksImg);
     data.background.mapHeight = data.size.height;
     data.blocks.mapWidth = data.size.width;
-    const squares = Block.fromData(data.blocks, blocksImg, darkBlocksImg, this.tileSize);
+    const squares = Block.fromData(data.blocks, blocksImg, tinitedBlocksImg, darkBlocksImg, this.tileSize);
     this.squares = squares;
     this.blockById = {};
     for (const b of this.squares) this.blockById[b.spriteId] = b;

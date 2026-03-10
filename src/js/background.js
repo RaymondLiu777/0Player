@@ -12,7 +12,7 @@ class Background {
     this.cacheCtx = null;
   }
 
-  load(data, image, instructionImg) {
+  load(data, image, tintedImage, instructionImg) {
     this.height = data.mapHeight;
     this.width = data.mapWidth;
     this.tiles = [];
@@ -80,6 +80,7 @@ class Background {
           spriteId,
           { x: col * this.tileSize, y: row * this.tileSize},
           image,
+          tintedImage,
           spriteFrame,
           this.tileSize,
           height,
@@ -100,6 +101,7 @@ class Background {
             groundSpriteId,
             { x: col * this.tileSize, y: row * this.tileSize },
             image,
+            tintedImage,
             bgFrame,
             this.tileSize,
             bgHeight,
